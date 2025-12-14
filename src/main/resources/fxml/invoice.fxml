@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.InvoiceController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="💰 Hóa đơn / Thống kê" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <Label text="Xem thống kê và xuất hóa đơn PDF" styleClass="hint"/>
+    
+    <!-- Statistics Cards -->
+    <HBox spacing="16" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
+            <Label text="💰 Tổng doanh thu" style="-fx-font-size: 13px;"/>
+            <Label fx:id="totalRevenueLabel" text="0 đ" styleClass="metric"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
+            <Label text="📅 Tổng booking" style="-fx-font-size: 13px;"/>
+            <Label fx:id="totalBookingsLabel" text="0" styleClass="metric"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
+            <Label text="👥 Tổng khách hàng" style="-fx-font-size: 13px;"/>
+            <Label fx:id="totalCustomersLabel" text="0" styleClass="metric"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
+            <Label text="📊 Trung bình/booking" style="-fx-font-size: 13px;"/>
+            <Label fx:id="averageBookingLabel" text="0 đ" styleClass="metric"/>
+        </VBox>
+    </HBox>
+    
+    <!-- Filter Section -->
+    <VBox spacing="12" styleClass="card">
+        <Label text="🔍 Lọc theo ngày" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="Từ ngày:" style="-fx-font-size: 12px;"/>
+            <DatePicker fx:id="fromDatePicker" prefWidth="150"/>
+            <Label text="Đến ngày:" style="-fx-font-size: 12px;"/>
+            <DatePicker fx:id="toDatePicker" prefWidth="150"/>
+            <Button text="🔍 Lọc" onAction="#handleFilter" prefWidth="100"/>
+            <Button text="🔄 Làm mới" onAction="#handleResetFilter" prefWidth="100" styleClass="ghost-btn"/>
+        </HBox>
+    </VBox>
+    
+    <!-- Export Buttons -->
+    <HBox spacing="12">
+        <Button text="📄 Xuất hóa đơn PDF (đã chọn)" onAction="#handleExportPdf" prefWidth="250" style="-fx-font-size: 14px; -fx-font-weight: bold;">
+            <tooltip>
+                <Tooltip text="Xuất hóa đơn PDF cho booking đã chọn"/>
+            </tooltip>
+        </Button>
+        <Button text="📊 Xuất báo cáo PDF (tất cả)" onAction="#handleExportAllPdf" prefWidth="250" style="-fx-font-size: 14px; -fx-font-weight: bold;">
+            <tooltip>
+                <Tooltip text="Xuất báo cáo thống kê PDF cho tất cả booking"/>
+            </tooltip>
+        </Button>
+    </HBox>
+    
+    <!-- Booking Table -->
+    <Label text="📋 Danh sách booking" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <TableView fx:id="invoiceTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colInvoiceId" text="Mã" prefWidth="80"/>
+            <TableColumn fx:id="colInvoiceCustomer" text="Khách hàng" prefWidth="200"/>
+            <TableColumn fx:id="colInvoiceHall" text="Sảnh" prefWidth="150"/>
+            <TableColumn fx:id="colInvoiceDate" text="Ngày tổ chức" prefWidth="120"/>
+            <TableColumn fx:id="colInvoiceTotal" text="Tổng tiền" prefWidth="150"/>
+        </columns>
+    </TableView>
+</VBox>

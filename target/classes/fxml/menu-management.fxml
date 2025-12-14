@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.MenuManagementController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="🍽️ Quản lý Menu" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <Label text="Thêm món ăn hoặc tạo gói menu (combo)" styleClass="hint"/>
+    
+    <HBox spacing="16" HBox.hgrow="ALWAYS">
+        <VBox spacing="12" HBox.hgrow="ALWAYS" prefWidth="400">
+            <Label text="➕ Thêm / Sửa món" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <VBox spacing="12" styleClass="card">
+                <VBox spacing="8">
+                    <Label text="Tên món / Combo *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="menuTitleField" promptText="Ví dụ: Combo Tiệc 1.5tr/mâm" prefHeight="40"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="Giá (VNĐ) *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="menuPriceField" promptText="Ví dụ: 1500000" prefHeight="40"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="Loại *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <ComboBox fx:id="categoryCombo" prefWidth="300" prefHeight="40">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="single"/>
+                                <String fx:value="combo"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                </VBox>
+                <HBox spacing="12">
+                    <Button text="💾 Lưu" onAction="#handleSave" prefWidth="120"/>
+                    <Button text="🔄 Làm mới" onAction="#handleReset" prefWidth="120" styleClass="ghost-btn"/>
+                </HBox>
+            </VBox>
+        </VBox>
+        
+        <VBox spacing="12" HBox.hgrow="ALWAYS">
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="📋 Danh sách menu" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <RadioButton fx:id="filterAllBtn" text="Tất cả" toggleGroup="$menuFilterGroup" userData="all" styleClass="chip"/>
+                <RadioButton fx:id="filterComboBtn" text="Combo" toggleGroup="$menuFilterGroup" userData="combo" styleClass="chip"/>
+                <RadioButton fx:id="filterSingleBtn" text="Món lẻ" toggleGroup="$menuFilterGroup" userData="single" styleClass="chip"/>
+            </HBox>
+            <TableView fx:id="menuTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colMenuTitle" text="Tên" prefWidth="250"/>
+                    <TableColumn fx:id="colMenuPrice" text="Giá (VNĐ)" prefWidth="150"/>
+                    <TableColumn fx:id="colMenuCategory" text="Loại" prefWidth="100"/>
+                    <TableColumn fx:id="colMenuActions" text="Thao tác" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </HBox>
+</VBox>

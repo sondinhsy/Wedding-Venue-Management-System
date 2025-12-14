@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.DashboardController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="📊 Tổng quan hệ thống" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <HBox spacing="16" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <Label text="👥 Tổng khách hàng" style="-fx-font-size: 13px;"/>
+            <Label fx:id="customerCountLabel" styleClass="metric"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <Label text="📅 Số booking" style="-fx-font-size: 13px;"/>
+            <Label fx:id="bookingCountLabel" styleClass="metric"/>
+        </VBox>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+            <Label text="💰 Doanh thu ước tính" style="-fx-font-size: 13px;"/>
+            <Label fx:id="revenueLabel" styleClass="metric"/>
+        </VBox>
+    </HBox>
+    <HBox spacing="16" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+            <Label text="🏛️ Doanh thu theo sảnh" style="-fx-font-size: 14px; -fx-font-weight: 600;"/>
+            <PieChart fx:id="hallRevenueChart" prefHeight="280" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+            <Label text="🍽️ Doanh thu theo thực đơn" style="-fx-font-size: 14px; -fx-font-weight: 600;"/>
+            <PieChart fx:id="menuRevenueChart" prefHeight="280" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </HBox>
+    <Label text="📋 Booking gần nhất" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 8 0;"/>
+    <TableView fx:id="bookingTable" prefHeight="320" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colBookingCustomer" text="Khách hàng" prefWidth="150"/>
+            <TableColumn fx:id="colBookingHall" text="Sảnh" prefWidth="120"/>
+            <TableColumn fx:id="colBookingDate" text="Ngày" prefWidth="100"/>
+            <TableColumn fx:id="colBookingTables" text="Bàn" prefWidth="60"/>
+            <TableColumn fx:id="colBookingTotal" text="Tổng tiền" prefWidth="150"/>
+            <TableColumn fx:id="colBookingMenu" text="Thực đơn" prefWidth="220"/>
+        </columns>
+    </TableView>
+</VBox>

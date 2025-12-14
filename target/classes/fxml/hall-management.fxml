@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.HallManagementController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="🏛️ Quản lý Sảnh" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <Label text="Quản lý thông tin 2 sảnh: Sảnh Tầng 1 và Sảnh Tầng 2" styleClass="hint"/>
+    
+    <HBox spacing="16" HBox.hgrow="ALWAYS">
+        <VBox spacing="12" HBox.hgrow="ALWAYS" prefWidth="400">
+            <Label text="➕ Thêm / Sửa sảnh" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <VBox spacing="12" styleClass="card">
+                <VBox spacing="8">
+                    <Label text="Tên sảnh *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="hallNameField" promptText="Ví dụ: Sảnh Tầng 1" prefHeight="40"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="Sức chứa (số bàn) *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <Spinner fx:id="capacitySpinner" prefWidth="300" prefHeight="40"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="Giá mỗi bàn (VNĐ) *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="priceField" promptText="Ví dụ: 120000" prefHeight="40"/>
+                </VBox>
+                <HBox spacing="12">
+                    <Button text="💾 Lưu" onAction="#handleSave" prefWidth="120"/>
+                    <Button text="🔄 Làm mới" onAction="#handleReset" prefWidth="120" styleClass="ghost-btn"/>
+                </HBox>
+            </VBox>
+        </VBox>
+        
+        <VBox spacing="12" HBox.hgrow="ALWAYS">
+            <Label text="📋 Danh sách sảnh" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <TableView fx:id="hallTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colHallName" text="Tên sảnh" prefWidth="200"/>
+                    <TableColumn fx:id="colHallCapacity" text="Sức chứa" prefWidth="120"/>
+                    <TableColumn fx:id="colHallPrice" text="Giá/bàn" prefWidth="150"/>
+                    <TableColumn fx:id="colHallActions" text="Thao tác" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </HBox>
+</VBox>
