@@ -157,7 +157,8 @@ public class MainController {
         customerCombo.setItems(customers);
         hallCombo.setItems(FXCollections.observableArrayList(hallDAO.findAll()));
         applyMenuFilter();
-        tableSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 500, 10));
+        // Mặc định tối thiểu 30 bàn
+        tableSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(30, 500, 30));
         updateTotalsHeader();
     }
 
@@ -330,8 +331,8 @@ public class MainController {
         }
         
         int tables = tableSpinner.getValue();
-        if (!Validators.isPositive(tables)) {
-            showError("Số bàn phải lớn hơn 0");
+        if (tables < 30) {
+            showError("Số bàn phải từ 30 bàn trở lên");
             tableSpinner.requestFocus();
             return;
         }
@@ -364,9 +365,13 @@ public class MainController {
     }
 
     private double calculateTotal(Booking booking) {
-        double menuTotal = booking.getMenuItems().stream().mapToDouble(MenuItem::getPrice).sum();
-        double perTable = booking.getHall().getPricePerTable() + menuTotal;
-        return perTable * booking.getTables();
+        // Tổng giá món/combo trên mỗi mâm
+        double perTableMenuPrice = booking.getMenuItems().stream()
+                .mapToDouble(MenuItem::getPrice)
+                .sum();
+        // Phí sảnh cố định (50$ cho mỗi sảnh mặc định, hoặc theo cấu hình)
+        double hallFee = booking.getHall().getPricePerTable();
+        return perTableMenuPrice * booking.getTables() + hallFee;
     }
 
     private void updateTotalPreview() {
@@ -404,7 +409,7 @@ public class MainController {
             hallInfoLabel.setText("Chọn sảnh để xem chi tiết");
             return;
         }
-        hallInfoLabel.setText(String.format("%s • %d bàn • %s/bàn", 
+        hallInfoLabel.setText(String.format("%s • %d bàn • Phí sảnh: %s", 
             hall.getName(), hall.getCapacity(), CurrencyFormatter.formatVND(hall.getPricePerTable())));
     }
 
@@ -456,7 +461,7 @@ public class MainController {
 
     private void clearBookingForm() {
         datePicker.setValue(null);
-        tableSpinner.getValueFactory().setValue(10);
+        tableSpinner.getValueFactory().setValue(30); // Minimum value is 30
         notesArea.clear();
         menuList.getSelectionModel().clearSelection();
         totalLabel.setText("0 đ");

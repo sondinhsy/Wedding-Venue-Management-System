@@ -3,39 +3,52 @@
 <?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Circle?>
 <VBox spacing="16" xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.weddingapp.controller.DashboardController">
+      xmlns:fx="http://javafx.com/fxml">
     <padding>
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
     <Label text="📊 Tổng quan hệ thống" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    
+    <!-- Charts Section -->
+    <HBox spacing="16" HBox.hgrow="ALWAYS" prefHeight="350">
+        <!-- Pie Chart - Tỷ trọng doanh thu theo mặt hàng -->
+        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS" prefWidth="400">
+            <Label text="Tỷ trọng doanh thu theo mặt hàng" style="-fx-font-size: 14px; -fx-font-weight: 600; -fx-padding: 0 0 8 0;"/>
+            <PieChart fx:id="menuRevenueChart" prefHeight="300" VBox.vgrow="ALWAYS" legendSide="RIGHT"/>
+            <!-- Legend labels sẽ được thêm bởi controller -->
+        </VBox>
+        
+        <!-- Donut Chart - Doanh thu theo hình thức phục vụ -->
+        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS" prefWidth="400">
+            <Label text="Doanh thu theo hình thức phục vụ" style="-fx-font-size: 14px; -fx-font-weight: 600; -fx-padding: 0 0 8 0;"/>
+            <StackPane fx:id="donutChartPane" prefHeight="300" VBox.vgrow="ALWAYS">
+                <PieChart fx:id="serviceTypeChart" prefHeight="300" VBox.vgrow="ALWAYS" legendSide="RIGHT" labelsVisible="false"/>
+                <Circle radius="80" fill="white"/>
+            </StackPane>
+        </VBox>
+    </HBox>
+    
+    <!-- Statistics Cards -->
     <HBox spacing="16" HBox.hgrow="ALWAYS">
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
             <Label text="👥 Tổng khách hàng" style="-fx-font-size: 13px;"/>
             <Label fx:id="customerCountLabel" styleClass="metric"/>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
-            <Label text="📅 Số booking" style="-fx-font-size: 13px;"/>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
+            <Label text="📅 Tổng booking" style="-fx-font-size: 13px;"/>
             <Label fx:id="bookingCountLabel" styleClass="metric"/>
         </VBox>
-        <VBox styleClass="card" HBox.hgrow="ALWAYS">
-            <Label text="💰 Doanh thu ước tính" style="-fx-font-size: 13px;"/>
+        <VBox styleClass="card" HBox.hgrow="ALWAYS" prefWidth="200">
+            <Label text="💰 Tổng doanh thu" style="-fx-font-size: 13px;"/>
             <Label fx:id="revenueLabel" styleClass="metric"/>
         </VBox>
     </HBox>
-    <HBox spacing="16" HBox.hgrow="ALWAYS">
-        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-            <Label text="🏛️ Doanh thu theo sảnh" style="-fx-font-size: 14px; -fx-font-weight: 600;"/>
-            <PieChart fx:id="hallRevenueChart" prefHeight="280" VBox.vgrow="ALWAYS"/>
-        </VBox>
-        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-            <Label text="🍽️ Doanh thu theo thực đơn" style="-fx-font-size: 14px; -fx-font-weight: 600;"/>
-            <PieChart fx:id="menuRevenueChart" prefHeight="280" VBox.vgrow="ALWAYS"/>
-        </VBox>
-    </HBox>
-    <Label text="📋 Booking gần nhất" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 8 0;"/>
-    <TableView fx:id="bookingTable" prefHeight="320" VBox.vgrow="ALWAYS">
+    
+    <!-- Booking Table -->
+    <Label text="📋 Danh sách booking" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 8 0;"/>
+    <TableView fx:id="bookingTable" prefHeight="300" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="colBookingCustomer" text="Khách hàng" prefWidth="150"/>
             <TableColumn fx:id="colBookingHall" text="Sảnh" prefWidth="120"/>

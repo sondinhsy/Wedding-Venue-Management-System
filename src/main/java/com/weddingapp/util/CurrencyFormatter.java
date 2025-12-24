@@ -5,61 +5,71 @@ import java.text.DecimalFormatSymbols;
 import java.util.Locale;
 
 /**
- * Utility class for formatting currency in Vietnamese Dong (VND)
+ * Utility class for formatting currency in US Dollars (USD)
  */
 public final class CurrencyFormatter {
-    private static final DecimalFormat VND_FORMATTER;
-    private static final DecimalFormat VND_COMPACT_FORMATTER;
+    private static final DecimalFormat USD_FORMATTER;
+    // Trước đây dùng tỉ giá VND -> USD. Bây giờ toàn bộ hệ thống lưu trực tiếp theo USD,
+    // nên đặt tỉ lệ = 1 để không đổi đơn vị nữa.
+    private static final double VND_TO_USD_RATE = 1.0;
     
     static {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.getDefault());
-        symbols.setGroupingSeparator('.');
-        symbols.setDecimalSeparator(',');
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        symbols.setGroupingSeparator(',');
+        symbols.setDecimalSeparator('.');
         
-        VND_FORMATTER = new DecimalFormat("#,###", symbols);
-        VND_COMPACT_FORMATTER = new DecimalFormat("#,##0.#", symbols);
+        USD_FORMATTER = new DecimalFormat("#,##0.00", symbols);
     }
     
     private CurrencyFormatter() {
     }
     
-    /**
-     * Format amount as Vietnamese Dong with full format
-     * @param amount the amount to format
-     * @return formatted string like "1.500.000 đ"
-     */
-    public static String formatVND(double amount) {
-        return VND_FORMATTER.format(amount) + " đ";
+    // Trước đây hàm này chuyển VND sang USD. Hiện tại chúng ta coi giá trị truyền vào
+    // đã là USD, nên chỉ trả về nguyên giá trị.
+    private static double vndToUsd(double vndAmount) {
+        return vndAmount / VND_TO_USD_RATE;
     }
     
     /**
-     * Format amount as Vietnamese Dong with compact format for large numbers
-     * @param amount the amount to format
-     * @return formatted string like "1,5 triệu đ" for 1.500.000
+     * Format amount as US Dollars with full format
+     * @param vndAmount the amount in USD (giá trị lưu trong DB)
+     * @return formatted string like "$1,500.00"
      */
-    public static String formatVNDCompact(double amount) {
-        if (amount >= 1_000_000) {
-            double millions = amount / 1_000_000;
-            return String.format("%.1f triệu đ", millions);
-        } else if (amount >= 1_000) {
-            double thousands = amount / 1_000;
-            return String.format("%.1f nghìn đ", thousands);
+    public static String formatVND(double vndAmount) {
+        double usdAmount = vndToUsd(vndAmount);
+        return "$" + USD_FORMATTER.format(usdAmount);
+    }
+    
+    /**
+     * Format amount as US Dollars with compact format for large numbers
+     * @param vndAmount the amount in USD (giá trị lưu trong DB)
+     * @return formatted string like "$1.5K" for 1,500
+     */
+    public static String formatVNDCompact(double vndAmount) {
+        double usdAmount = vndToUsd(vndAmount);
+        if (usdAmount >= 1_000_000) {
+            double millions = usdAmount / 1_000_000;
+            return String.format("$%.2fM", millions);
+        } else if (usdAmount >= 1_000) {
+            double thousands = usdAmount / 1_000;
+            return String.format("$%.2fK", thousands);
         }
-        return formatVND(amount);
+        return formatVND(vndAmount);
     }
     
     /**
-     * Parse VND string to double (removes "đ" and dots)
-     * @param vndString string like "1.500.000 đ"
-     * @return double value
+     * Parse USD string to double (removes "$" and commas)
+     * @param usdString string like "$150.00"
+     * @return double value in VND
      */
-    public static double parseVND(String vndString) {
-        if (vndString == null || vndString.trim().isEmpty()) {
+    public static double parseVND(String usdString) {
+        if (usdString == null || usdString.trim().isEmpty()) {
             return 0.0;
         }
-        String cleaned = vndString.replace("đ", "").replace(".", "").replace(",", ".").trim();
+        String cleaned = usdString.replace("$", "").replace(",", "").trim();
         try {
-            return Double.parseDouble(cleaned);
+            double usdAmount = Double.parseDouble(cleaned);
+            return usdAmount * VND_TO_USD_RATE;
         } catch (NumberFormatException e) {
             return 0.0;
         }

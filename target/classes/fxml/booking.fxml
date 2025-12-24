@@ -48,7 +48,14 @@
                 <Label text="💰 Tổng tiền" style="-fx-font-size: 13px;"/>
                 <Label fx:id="totalLabel" text="0 đ" styleClass="metric"/>
             </VBox>
-            <Button text="✅ Lưu booking" onAction="#handleSaveBooking" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
+            <!-- Thông tin tóm tắt đơn đặt chỗ -->
+            <VBox spacing="6" styleClass="card">
+                <Label text="📋 Tóm tắt đơn đặt chỗ" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                <Label fx:id="summaryHallLabel" wrapText="true" style="-fx-font-size: 12px;"/>
+                <Label fx:id="summaryMenuLabel" wrapText="true" style="-fx-font-size: 12px;"/>
+                <Label fx:id="summaryTotalLabel" wrapText="true" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+            </VBox>
+            <Button fx:id="saveBookingButton" text="✅ Lưu booking" onAction="#handleSaveBooking" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
                 <tooltip>
                     <Tooltip text="Lưu thông tin đặt chỗ"/>
                 </tooltip>

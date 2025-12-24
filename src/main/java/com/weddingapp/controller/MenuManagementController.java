@@ -4,13 +4,15 @@ import com.weddingapp.dao.MenuDAO;
 import com.weddingapp.model.MenuItem;
 import com.weddingapp.util.CurrencyFormatter;
 import com.weddingapp.util.Validators;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.geometry.Pos;
 
 public class MenuManagementController {
     private final MenuDAO menuDAO = new MenuDAO();
@@ -21,11 +23,8 @@ public class MenuManagementController {
     @FXML private TextField menuTitleField;
     @FXML private TextField menuPriceField;
     @FXML private ComboBox<String> categoryCombo;
-    @FXML private TableView<MenuItem> menuTable;
-    @FXML private TableColumn<MenuItem, String> colMenuTitle;
-    @FXML private TableColumn<MenuItem, String> colMenuPrice;
-    @FXML private TableColumn<MenuItem, String> colMenuCategory;
-    @FXML private TableColumn<MenuItem, String> colMenuActions;
+    @FXML private ScrollPane menuScrollPane;
+    @FXML private FlowPane menuGridPane;
     @FXML private RadioButton filterAllBtn;
     @FXML private RadioButton filterComboBtn;
     @FXML private RadioButton filterSingleBtn;
@@ -33,61 +32,134 @@ public class MenuManagementController {
 
     @FXML
     public void initialize() {
-        setupTable();
         loadData();
         categoryCombo.getItems().addAll("single", "combo");
         categoryCombo.setValue("single");
         
-        menuTable.setItems(filteredMenus);
-        menuTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null) {
-                loadMenuItemToForm(newVal);
-            }
+        filteredMenus.addListener((javafx.collections.ListChangeListener.Change<? extends MenuItem> change) -> {
+            updateMenuGrid();
         });
         
-        menuFilterGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> applyFilter());
+        menuFilterGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+            applyFilter();
+            updateMenuGrid();
+        });
         if (filterAllBtn != null) {
             filterAllBtn.setSelected(true);
         }
+        
+        updateMenuGrid();
     }
 
-    private void setupTable() {
-        colMenuTitle.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().getTitle()));
-        colMenuPrice.setCellValueFactory(cell -> 
-            new SimpleStringProperty(CurrencyFormatter.formatVND(cell.getValue().getPrice())));
-        colMenuCategory.setCellValueFactory(cell -> {
-            String cat = cell.getValue().getCategory();
-            return new SimpleStringProperty("combo".equalsIgnoreCase(cat) ? "Combo" : "Món lẻ");
-        });
+    private void updateMenuGrid() {
+        menuGridPane.getChildren().clear();
+
+        // Nếu chưa có món nào, hiển thị một vài khung trống mẫu để sau này gắn ảnh
+        if (filteredMenus.isEmpty()) {
+            for (int i = 0; i < 4; i++) {
+                VBox placeholderCard = createEmptyPlaceholderCard();
+                menuGridPane.getChildren().add(placeholderCard);
+            }
+            return;
+        }
+
+        for (MenuItem item : filteredMenus) {
+            VBox card = createMenuCard(item);
+            menuGridPane.getChildren().add(card);
+        }
+    }
+
+    private VBox createMenuCard(MenuItem item) {
+        VBox card = new VBox(8);
+        card.setPrefWidth(180);
+        card.setPrefHeight(250);
+        card.setStyle("-fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;");
         
-        colMenuActions.setCellFactory(param -> new TableCell<>() {
-            private final Button editBtn = new Button("✏️ Sửa");
-            private final Button deleteBtn = new Button("🗑️ Xóa");
-            
-            {
-                editBtn.setOnAction(e -> {
-                    MenuItem item = getTableView().getItems().get(getIndex());
-                    loadMenuItemToForm(item);
-                });
-                deleteBtn.setOnAction(e -> {
-                    MenuItem item = getTableView().getItems().get(getIndex());
-                    handleDelete(item);
-                });
-                editBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 8;");
-                deleteBtn.setStyle("-fx-font-size: 11px; -fx-padding: 4 8; -fx-background-color: #dc2626;");
-            }
-            
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    HBox box = new HBox(8, editBtn, deleteBtn);
-                    setGraphic(box);
-                }
-            }
-        });
+        // Image placeholder
+        StackPane imagePane = new StackPane();
+        imagePane.setPrefSize(156, 120);
+        imagePane.setStyle("-fx-background-color: #f3f4f6; -fx-background-radius: 4;");
+        
+        ImageView imageView = new ImageView();
+        imageView.setFitWidth(156);
+        imageView.setFitHeight(120);
+        imageView.setPreserveRatio(true);
+        
+        // Try to load image if available (placeholder for now)
+        try {
+            String imagePath = "/images/menu/" + item.getId() + ".jpg";
+            Image image = new Image(getClass().getResourceAsStream(imagePath));
+            imageView.setImage(image);
+            imagePane.getChildren().add(imageView);
+        } catch (Exception e) {
+            // Use placeholder
+            Label placeholder = new Label("🍽️");
+            placeholder.setStyle("-fx-font-size: 48px;");
+            imagePane.getChildren().add(placeholder);
+        }
+        
+        card.getChildren().add(imagePane);
+        
+        // Title
+        Label titleLabel = new Label(item.getTitle());
+        titleLabel.setWrapText(true);
+        titleLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1f2937;");
+        titleLabel.setMaxWidth(156);
+        
+        // Price
+        Label priceLabel = new Label(CurrencyFormatter.formatVND(item.getPrice()));
+        priceLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;");
+        
+        // Category badge
+        Label categoryLabel = new Label("combo".equalsIgnoreCase(item.getCategory()) ? "Combo" : "Món lẻ");
+        categoryLabel.setStyle("-fx-font-size: 11px; -fx-background-color: #dbeafe; -fx-text-fill: #1e40af; -fx-padding: 4 8; -fx-background-radius: 12;");
+        
+        // Buttons
+        HBox buttonBox = new HBox(4);
+        Button editBtn = new Button("✏️");
+        editBtn.setStyle("-fx-font-size: 12px; -fx-padding: 4 8; -fx-background-color: #3b82f6; -fx-text-fill: white;");
+        editBtn.setOnAction(e -> loadMenuItemToForm(item));
+        
+        Button deleteBtn = new Button("🗑️");
+        deleteBtn.setStyle("-fx-font-size: 12px; -fx-padding: 4 8; -fx-background-color: #dc2626; -fx-text-fill: white;");
+        deleteBtn.setOnAction(e -> handleDelete(item));
+        
+        buttonBox.getChildren().addAll(editBtn, deleteBtn);
+        
+        card.getChildren().addAll(titleLabel, priceLabel, categoryLabel, buttonBox);
+        card.setAlignment(Pos.TOP_CENTER);
+        
+        return card;
+    }
+
+    /**
+     * Tạo khung trống mẫu (card trắng có ô ảnh rỗng) dùng khi chưa có dữ liệu menu.
+     * Chỉ mang tính minh họa để bạn dễ hình dung vị trí ảnh món ăn sau này.
+     */
+    private VBox createEmptyPlaceholderCard() {
+        VBox card = new VBox(8);
+        card.setPrefWidth(180);
+        card.setPrefHeight(250);
+        card.setStyle("-fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12; -fx-border-style: segments(10, 4); -fx-border-width: 1;");
+
+        StackPane imagePane = new StackPane();
+        imagePane.setPrefSize(156, 120);
+        imagePane.setStyle("-fx-background-color: #f9fafb; -fx-background-radius: 4; -fx-border-color: #d1d5db; -fx-border-radius: 4; -fx-border-style: dashed;");
+
+        Label icon = new Label("Thêm ảnh món ăn");
+        icon.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 11px;");
+        imagePane.getChildren().add(icon);
+
+        Label title = new Label("Khung món ăn (trống)");
+        title.setStyle("-fx-font-size: 13px; -fx-text-fill: #6b7280;");
+
+        Label hint = new Label("Sau này bạn có thể gắn ảnh thật cho từng món ở đây.");
+        hint.setWrapText(true);
+        hint.setStyle("-fx-font-size: 11px; -fx-text-fill: #9ca3af;");
+
+        card.getChildren().addAll(imagePane, title, hint);
+        card.setAlignment(Pos.TOP_CENTER);
+        return card;
     }
 
     private void loadData() {
@@ -97,7 +169,8 @@ public class MenuManagementController {
     private void loadMenuItemToForm(MenuItem item) {
         selectedMenuItem = item;
         menuTitleField.setText(item.getTitle());
-        menuPriceField.setText(String.valueOf((int)item.getPrice()));
+        // Price is already stored in USD, display directly
+        menuPriceField.setText(String.format("%.2f", item.getPrice()));
         categoryCombo.setValue(item.getCategory());
     }
 
@@ -153,7 +226,7 @@ public class MenuManagementController {
                 selectedMenuItem.setPrice(price);
                 selectedMenuItem.setCategory(category);
                 menuDAO.update(selectedMenuItem);
-                menuTable.refresh();
+                updateMenuGrid();
                 showSuccess("Đã cập nhật món: " + title);
             }
             handleReset();
@@ -168,7 +241,6 @@ public class MenuManagementController {
         menuTitleField.clear();
         menuPriceField.clear();
         categoryCombo.setValue("single");
-        menuTable.getSelectionModel().clearSelection();
     }
 
     private void applyFilter() {
@@ -198,6 +270,7 @@ public class MenuManagementController {
                 try {
                     menuDAO.delete(item.getId());
                     menus.remove(item);
+                    updateMenuGrid();
                     handleReset();
                     showSuccess("Đã xóa món: " + item.getTitle());
                 } catch (Exception e) {

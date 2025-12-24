@@ -52,6 +52,25 @@ public class BookingDAO {
         return new ArrayList<>(bookings.values());
     }
 
+    /**
+     * Tổng số bàn đã được đặt cho một sảnh trong một ngày cụ thể.
+     */
+    public int getTotalTablesForHallOnDate(int hallId, LocalDate date) {
+        String sql = "SELECT COALESCE(SUM(tables), 0) AS total_tables FROM bookings WHERE hall_id = ? AND event_date = ?";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, hallId);
+            ps.setString(2, date.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("total_tables");
+            }
+            return 0;
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     public Booking save(Booking booking) {
         String sql = "INSERT INTO bookings(customer_id, hall_id, event_date, tables, total, notes) VALUES(?,?,?,?,?,?)";
         try (Connection conn = Database.getConnection();

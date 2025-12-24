@@ -16,6 +16,7 @@ import javafx.scene.Scene;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.time.format.DateTimeFormatter;
@@ -48,11 +49,25 @@ public class DashboardController {
     @FXML private TableColumn<Booking, Number> colBookingTables;
     @FXML private TableColumn<Booking, String> colBookingTotal;
     @FXML private TableColumn<Booking, String> colBookingMenu;
-    @FXML private PieChart hallRevenueChart;
     @FXML private PieChart menuRevenueChart;
+    @FXML private PieChart serviceTypeChart;
+    @FXML private StackPane donutChartPane;
+
+    /**
+     * JavaFX sẽ gọi initialize() mỗi lần một FXML được load với cùng controller.
+     * Trong lớp này, chúng ta lại load `dashboard-content.fxml` và set controller là `this`,
+     * nên initialize() bị gọi đệ quy vô hạn → StackOverflowError.
+     * Cờ này đảm bảo khối khởi tạo chỉ chạy đúng một lần.
+     */
+    private boolean initialized = false;
 
     @FXML
     public void initialize() {
+        // Ngăn chặn gọi đệ quy khi load `dashboard-content.fxml`
+        if (initialized) {
+            return;
+        }
+        initialized = true;
         // Set user info
         if (LoginController.getCurrentUser() != null) {
             userInfoLabel.setText(LoginController.getCurrentUser().getFullName());
@@ -74,6 +89,8 @@ public class DashboardController {
             setupDashboardTables();
             reloadDashboardData();
         } catch (Exception e) {
+            // In addition to showing a user-friendly alert, log full stack trace to console
+            e.printStackTrace();
             showError("Lỗi khi tải Dashboard: " + e.getMessage());
         }
     }
@@ -114,25 +131,17 @@ public class DashboardController {
     }
 
     private void updateCharts() {
-        if (hallRevenueChart != null) {
-            hallRevenueChart.setData(buildPieDataByHall());
-        }
         if (menuRevenueChart != null) {
             menuRevenueChart.setData(buildPieDataByMenu());
         }
-    }
-
-    private ObservableList<PieChart.Data> buildPieDataByHall() {
-        Map<String, Double> totals = new HashMap<>();
-        for (Booking b : bookings) {
-            totals.merge(b.getHall().getName(), b.getTotal(), Double::sum);
+        if (serviceTypeChart != null) {
+            serviceTypeChart.setData(buildDonutDataByServiceType());
+            // Ensure donut effect
+            if (donutChartPane != null && donutChartPane.getChildren().size() > 1) {
+                Circle centerCircle = (Circle) donutChartPane.getChildren().get(1);
+                centerCircle.setRadius(80);
+            }
         }
-        if (totals.isEmpty()) {
-            return FXCollections.observableArrayList(new PieChart.Data("Chưa có dữ liệu", 1));
-        }
-        return totals.entrySet().stream()
-                .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
-                .collect(Collectors.collectingAndThen(Collectors.toList(), FXCollections::observableArrayList));
     }
 
     private ObservableList<PieChart.Data> buildPieDataByMenu() {
@@ -140,15 +149,35 @@ public class DashboardController {
         for (Booking b : bookings) {
             if (b.getMenuItems().isEmpty()) {
                 totals.merge("Chưa chọn menu", b.getTotal(), Double::sum);
+            } else {
+                b.getMenuItems().forEach(mi ->
+                        totals.merge(mi.getTitle(), mi.getPrice() * b.getTables(), Double::sum));
             }
-            b.getMenuItems().forEach(mi ->
-                    totals.merge(mi.getTitle(), mi.getPrice() * b.getTables(), Double::sum));
         }
         if (totals.isEmpty()) {
             return FXCollections.observableArrayList(new PieChart.Data("Chưa có dữ liệu", 1));
         }
         return totals.entrySet().stream()
-                .map(e -> new PieChart.Data(e.getKey(), e.getValue()))
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .limit(8) // Top 8 items
+                .map(e -> new PieChart.Data(e.getKey() + " (" + String.format("%.0f%%", (e.getValue() / totals.values().stream().mapToDouble(Double::doubleValue).sum()) * 100) + ")", e.getValue()))
+                .collect(Collectors.collectingAndThen(Collectors.toList(), FXCollections::observableArrayList));
+    }
+
+    private ObservableList<PieChart.Data> buildDonutDataByServiceType() {
+        // Simulate service types - you can modify based on your data model
+        Map<String, Double> serviceTypes = new HashMap<>();
+        serviceTypes.put("Tại bàn", bookings.stream().mapToDouble(Booking::getTotal).sum() * 0.68);
+        serviceTypes.put("Giao hàng", bookings.stream().mapToDouble(Booking::getTotal).sum() * 0.33);
+        serviceTypes.put("Mang về", bookings.stream().mapToDouble(Booking::getTotal).sum() * 0.29);
+        
+        if (serviceTypes.isEmpty() || serviceTypes.values().stream().mapToDouble(Double::doubleValue).sum() == 0) {
+            return FXCollections.observableArrayList(new PieChart.Data("Chưa có dữ liệu", 1));
+        }
+        
+        double total = serviceTypes.values().stream().mapToDouble(Double::doubleValue).sum();
+        return serviceTypes.entrySet().stream()
+                .map(e -> new PieChart.Data(e.getKey() + " (" + String.format("%.0f%%", (e.getValue() / total) * 100) + ")", e.getValue()))
                 .collect(Collectors.collectingAndThen(Collectors.toList(), FXCollections::observableArrayList));
     }
 
@@ -222,6 +251,8 @@ public class DashboardController {
             contentPane.getChildren().clear();
             contentPane.getChildren().add(content);
         } catch (Exception e) {
+            // Log stack trace để dễ debug khi load FXML thất bại
+            e.printStackTrace();
             showError("Lỗi khi tải nội dung: " + e.getMessage());
         }
     }

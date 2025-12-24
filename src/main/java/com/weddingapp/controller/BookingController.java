@@ -4,12 +4,12 @@ import com.weddingapp.dao.BookingDAO;
 import com.weddingapp.dao.CustomerDAO;
 import com.weddingapp.dao.HallDAO;
 import com.weddingapp.dao.MenuDAO;
+import com.weddingapp.dao.ComboItemDAO;
 import com.weddingapp.model.Booking;
 import com.weddingapp.model.Customer;
 import com.weddingapp.model.Hall;
 import com.weddingapp.model.MenuItem;
 import com.weddingapp.util.CurrencyFormatter;
-import com.weddingapp.util.Validators;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -30,6 +30,7 @@ public class BookingController {
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final HallDAO hallDAO = new HallDAO();
     private final MenuDAO menuDAO = new MenuDAO();
+    private final ComboItemDAO comboItemDAO = new ComboItemDAO();
 
     private final ObservableList<Customer> customers = FXCollections.observableArrayList();
     private final ObservableList<MenuItem> menus = FXCollections.observableArrayList();
@@ -47,16 +48,22 @@ public class BookingController {
     @FXML private RadioButton filterComboBtn;
     @FXML private RadioButton filterSingleBtn;
     @FXML private ToggleGroup menuFilterGroup;
+    @FXML private Button saveBookingButton;
+    @FXML private Label summaryHallLabel;
+    @FXML private Label summaryMenuLabel;
+    @FXML private Label summaryTotalLabel;
 
     @FXML
     public void initialize() {
         loadData();
         setupMenuList();
         setupListeners();
-        tableSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 500, 10));
+        // Mặc định tối thiểu 30 bàn
+        tableSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(30, 500, 30));
         if (filterAllBtn != null) {
             filterAllBtn.setSelected(true);
         }
+        updateSummary();
     }
 
     private void loadData() {
@@ -86,6 +93,9 @@ public class BookingController {
     }
 
     private void setupListeners() {
+        // Khi đổi ngày tổ chức, kiểm tra xem các sảnh trong ngày đó còn chỗ không
+        datePicker.valueProperty().addListener((obs, oldVal, newVal) -> updateAvailabilityForDate(newVal));
+
         tableSpinner.valueProperty().addListener((obs, oldVal, newVal) -> updateTotalPreview());
         menuList.getSelectionModel().getSelectedItems().addListener((ListChangeListener<MenuItem>) change -> updateTotalPreview());
         hallCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
@@ -93,6 +103,58 @@ public class BookingController {
             updateHallInfo(newVal);
         });
         menuFilterGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> applyMenuFilter());
+    }
+
+    /**
+     * Cập nhật danh sách sảnh còn trống và trạng thái form theo ngày được chọn.
+     * Nếu tất cả sảnh đều đã full cho ngày đó thì khóa chức năng đặt chỗ.
+     */
+    private void updateAvailabilityForDate(java.time.LocalDate date) {
+        if (date == null) {
+            setBookingFormDisabled(false);
+            // Hiển thị lại tất cả sảnh
+            hallCombo.setItems(FXCollections.observableArrayList(hallDAO.findAll()));
+            hallCombo.getSelectionModel().clearSelection();
+            hallInfoLabel.setText("Chọn sảnh để xem chi tiết");
+            return;
+        }
+
+        ObservableList<Hall> allHalls = FXCollections.observableArrayList(hallDAO.findAll());
+        ObservableList<Hall> availableHalls = FXCollections.observableArrayList();
+
+        for (Hall hall : allHalls) {
+            int usedTables = bookingDAO.getTotalTablesForHallOnDate(hall.getId(), date);
+            if (usedTables < hall.getCapacity()) {
+                availableHalls.add(hall);
+            }
+        }
+
+        if (availableHalls.isEmpty()) {
+            // Cả 2 sảnh đã full trong ngày này → khóa chức năng đặt mới
+            setBookingFormDisabled(true);
+            hallCombo.getItems().clear();
+            hallInfoLabel.setText("Cả hai sảnh đã full trong ngày này. Bạn chỉ có thể xem thông tin các đơn đã đặt.");
+            totalLabel.setText("0 đ");
+        } else {
+            setBookingFormDisabled(false);
+            hallCombo.setItems(availableHalls);
+            hallCombo.getSelectionModel().clearSelection();
+            hallInfoLabel.setText("Chọn sảnh để xem chi tiết");
+        }
+    }
+
+    private void setBookingFormDisabled(boolean disabled) {
+        customerCombo.setDisable(disabled);
+        hallCombo.setDisable(disabled);
+        tableSpinner.setDisable(disabled);
+        notesArea.setDisable(disabled);
+        menuList.setDisable(disabled);
+        filterAllBtn.setDisable(disabled);
+        filterComboBtn.setDisable(disabled);
+        filterSingleBtn.setDisable(disabled);
+        if (saveBookingButton != null) {
+            saveBookingButton.setDisable(disabled);
+        }
     }
 
     private void applyMenuFilter() {
@@ -114,15 +176,18 @@ public class BookingController {
     private void updateHallInfo(Hall hall) {
         if (hall == null) {
             hallInfoLabel.setText("Chọn sảnh để xem chi tiết");
+            updateSummary();
             return;
         }
-        hallInfoLabel.setText(String.format("%s • %d bàn • %s/bàn", 
+        hallInfoLabel.setText(String.format("%s • %d bàn • Phí sảnh: %s", 
             hall.getName(), hall.getCapacity(), CurrencyFormatter.formatVND(hall.getPricePerTable())));
+        updateSummary();
     }
 
     private void updateTotalPreview() {
         if (hallCombo.getValue() == null) {
             totalLabel.setText("0 đ");
+            updateSummary();
             return;
         }
         Booking temp = new Booking();
@@ -131,12 +196,21 @@ public class BookingController {
         temp.setTables(tableSpinner.getValue());
         double total = calculateTotal(temp);
         totalLabel.setText(CurrencyFormatter.formatVND(total));
+        updateSummary();
     }
 
+    /**
+     * Tính tổng tiền:
+     *  - Phí sảnh cố định: hall.getPricePerTable() (50$)
+     *  - Giá mỗi mâm: tổng giá tất cả món/combo đã chọn (menuItems)
+     *  - Tổng = (giá mỗi mâm * số bàn) + phí sảnh.
+     */
     private double calculateTotal(Booking booking) {
-        double menuTotal = booking.getMenuItems().stream().mapToDouble(MenuItem::getPrice).sum();
-        double perTable = booking.getHall().getPricePerTable() + menuTotal;
-        return perTable * booking.getTables();
+        double perTableMenuPrice = booking.getMenuItems().stream()
+                .mapToDouble(MenuItem::getPrice)
+                .sum();
+        double hallFee = booking.getHall().getPricePerTable();
+        return perTableMenuPrice * booking.getTables() + hallFee;
     }
 
     @FXML
@@ -226,14 +300,30 @@ public class BookingController {
         }
         
         int tables = tableSpinner.getValue();
-        if (!Validators.isPositive(tables)) {
-            showError("Số bàn phải lớn hơn 0");
+        if (tables < 30) {
+            showError("Số bàn phải từ 30 bàn trở lên");
             tableSpinner.requestFocus();
             return;
         }
         
-        if (tables > hallCombo.getValue().getCapacity()) {
-            showError("Số bàn vượt quá sức chứa của sảnh (" + hallCombo.getValue().getCapacity() + " bàn)");
+        Hall selectedHall = hallCombo.getValue();
+        if (tables > selectedHall.getCapacity()) {
+            showError("Số bàn vượt quá sức chứa tối đa của sảnh (" + selectedHall.getCapacity() + " bàn)");
+            tableSpinner.requestFocus();
+            return;
+        }
+
+        // Kiểm tra tổng số bàn đã đặt trong ngày đó cho sảnh này
+        int existingTablesForHall = bookingDAO.getTotalTablesForHallOnDate(selectedHall.getId(), datePicker.getValue());
+        if (existingTablesForHall + tables > selectedHall.getCapacity()) {
+            int remaining = Math.max(selectedHall.getCapacity() - existingTablesForHall, 0);
+            if (remaining == 0) {
+                showError("Sảnh \"" + selectedHall.getName() + "\" đã được đặt hết " + selectedHall.getCapacity() +
+                        " bàn cho ngày này. Vui lòng chọn sảnh khác hoặc ngày khác.");
+            } else {
+                showError("Trong ngày này, sảnh \"" + selectedHall.getName() + "\" chỉ còn tối đa " + remaining +
+                        " bàn trống. Vui lòng giảm số bàn hoặc chọn ngày khác.");
+            }
             tableSpinner.requestFocus();
             return;
         }
@@ -257,10 +347,66 @@ public class BookingController {
 
     private void clearForm() {
         datePicker.setValue(null);
-        tableSpinner.getValueFactory().setValue(10);
+        tableSpinner.getValueFactory().setValue(30);
         notesArea.clear();
         menuList.getSelectionModel().clearSelection();
         totalLabel.setText("0 đ");
+        updateSummary();
+    }
+
+    /**
+     * Cập nhật phần tóm tắt: sảnh, số bàn, danh sách món/combo, tổng tiền.
+     */
+    private void updateSummary() {
+        if (summaryHallLabel == null) {
+            return;
+        }
+
+        String hallText;
+        if (hallCombo.getValue() == null || datePicker.getValue() == null) {
+            hallText = "Sảnh: Chưa chọn • Ngày: Chưa chọn • Số bàn: " + tableSpinner.getValue();
+        } else {
+            Hall h = hallCombo.getValue();
+            hallText = String.format("Sảnh: %s • Ngày: %s • Số bàn: %d",
+                    h.getName(),
+                    datePicker.getValue(),
+                    tableSpinner.getValue());
+        }
+        summaryHallLabel.setText(hallText);
+
+        ObservableList<MenuItem> selectedItems = menuList.getSelectionModel().getSelectedItems();
+        if (selectedItems == null || selectedItems.isEmpty()) {
+            summaryMenuLabel.setText("Thực đơn: Chưa chọn món");
+        } else {
+            long comboCount = selectedItems.stream().filter(mi -> "combo".equalsIgnoreCase(mi.getCategory())).count();
+            long singleCount = selectedItems.size() - comboCount;
+
+            StringBuilder details = new StringBuilder();
+            for (MenuItem mi : selectedItems) {
+                if ("combo".equalsIgnoreCase(mi.getCategory())) {
+                    var comboItems = comboItemDAO.findByComboId(mi.getId());
+                    details.append(mi.getTitle()).append(" (Combo: ");
+                    if (comboItems.isEmpty()) {
+                        details.append("chưa cấu hình món");
+                    } else {
+                        for (int i = 0; i < comboItems.size(); i++) {
+                            var ci = comboItems.get(i);
+                            if (i > 0) details.append(", ");
+                            details.append(ci.getItem().getTitle())
+                                   .append(" x").append(ci.getQuantity());
+                        }
+                    }
+                    details.append(")").append("; ");
+                } else {
+                    details.append(mi.getTitle()).append(" (Món lẻ); ");
+                }
+            }
+
+            summaryMenuLabel.setText(String.format("Thực đơn (%d mục: %d combo, %d món lẻ): %s",
+                    selectedItems.size(), comboCount, singleCount, details.toString()));
+        }
+
+        summaryTotalLabel.setText("Tổng tiền dự kiến: " + totalLabel.getText());
     }
 
     private void showSuccess(String message) {

@@ -75,6 +75,18 @@ public final class Database {
                         category TEXT DEFAULT 'single'
                     )
                     """);
+            // Bảng chi tiết thành phần combo: combo_id tham chiếu menu_items (category = 'combo'),
+            // item_id tham chiếu menu_items (thường là 'single'), quantity là số lượng món trong combo.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS combo_items(
+                        combo_id INTEGER NOT NULL,
+                        item_id INTEGER NOT NULL,
+                        quantity INTEGER NOT NULL DEFAULT 1,
+                        PRIMARY KEY(combo_id, item_id),
+                        FOREIGN KEY(combo_id) REFERENCES menu_items(id),
+                        FOREIGN KEY(item_id) REFERENCES menu_items(id)
+                    )
+                    """);
             st.execute("""
                     CREATE TABLE IF NOT EXISTS bookings(
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,13 +131,20 @@ public final class Database {
                     SELECT 'staff', 'staff123', 'Nhân viên', 'staff' 
                     WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'staff')
                     """);
+            // Mỗi sảnh mặc định 100 bàn và phí sảnh cố định 50 USD
             st.executeUpdate("""
                     INSERT INTO halls(name, capacity, price_per_table)
-                    SELECT 'Sảnh Tầng 1', 55, 120.0 WHERE NOT EXISTS (SELECT 1 FROM halls WHERE name = 'Sảnh Tầng 1')
+                    SELECT 'Sảnh Tầng 1', 100, 50.0 WHERE NOT EXISTS (SELECT 1 FROM halls WHERE name = 'Sảnh Tầng 1')
                     """);
             st.executeUpdate("""
                     INSERT INTO halls(name, capacity, price_per_table)
-                    SELECT 'Sảnh Tầng 2', 45, 140.0 WHERE NOT EXISTS (SELECT 1 FROM halls WHERE name = 'Sảnh Tầng 2')
+                    SELECT 'Sảnh Tầng 2', 100, 50.0 WHERE NOT EXISTS (SELECT 1 FROM halls WHERE name = 'Sảnh Tầng 2')
+                    """);
+            // Đảm bảo cập nhật cả dữ liệu cũ (nếu DB đã tồn tại trước đó)
+            st.executeUpdate("""
+                    UPDATE halls
+                    SET capacity = 100, price_per_table = 50.0
+                    WHERE name IN ('Sảnh Tầng 1', 'Sảnh Tầng 2')
                     """);
             st.executeUpdate("""
                     INSERT INTO menu_items(title, price, category)
@@ -154,6 +173,41 @@ public final class Database {
             st.executeUpdate("""
                     INSERT INTO customers(name, phone, email)
                     SELECT 'Demo Customer', '0123456789', 'demo@example.com' WHERE NOT EXISTS (SELECT 1 FROM customers)
+                    """);
+
+            // Seed thành phần của các combo mẫu nếu chưa có
+            st.executeUpdate("""
+                    INSERT INTO combo_items(combo_id, item_id, quantity)
+                    SELECT c.id, i.id, 1
+                    FROM menu_items c, menu_items i
+                    WHERE c.title = 'Combo Tiệc 1.5tr/mâm'
+                      AND i.title IN ('Set Hải sản', 'Set Chay')
+                      AND NOT EXISTS (
+                        SELECT 1 FROM combo_items ci
+                        WHERE ci.combo_id = c.id AND ci.item_id = i.id
+                    )
+                    """);
+            st.executeUpdate("""
+                    INSERT INTO combo_items(combo_id, item_id, quantity)
+                    SELECT c.id, i.id, 1
+                    FROM menu_items c, menu_items i
+                    WHERE c.title = 'Combo Tiệc 2tr/mâm'
+                      AND i.title IN ('Set Hải sản', 'Set Bò Mỹ', 'Set Chay')
+                      AND NOT EXISTS (
+                        SELECT 1 FROM combo_items ci
+                        WHERE ci.combo_id = c.id AND ci.item_id = i.id
+                    )
+                    """);
+            st.executeUpdate("""
+                    INSERT INTO combo_items(combo_id, item_id, quantity)
+                    SELECT c.id, i.id, 1
+                    FROM menu_items c, menu_items i
+                    WHERE c.title = 'Combo VIP 3tr/mâm'
+                      AND i.title IN ('Set Hải sản', 'Set Bò Mỹ', 'Set Chay')
+                      AND NOT EXISTS (
+                        SELECT 1 FROM combo_items ci
+                        WHERE ci.combo_id = c.id AND ci.item_id = i.id
+                    )
                     """);
         }
     }

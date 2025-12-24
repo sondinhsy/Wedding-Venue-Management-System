@@ -2,6 +2,8 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
 <VBox spacing="16" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.weddingapp.controller.MenuManagementController">
@@ -10,7 +12,12 @@
     </padding>
     <Label text="🍽️ Quản lý Menu" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
     <Label text="Thêm món ăn hoặc tạo gói menu (combo)" styleClass="hint"/>
-    
+
+    <!-- Định nghĩa ToggleGroup để binding với field menuFilterGroup trong controller -->
+    <fx:define>
+        <ToggleGroup fx:id="menuFilterGroup"/>
+    </fx:define>
+
     <HBox spacing="16" HBox.hgrow="ALWAYS">
         <VBox spacing="12" HBox.hgrow="ALWAYS" prefWidth="400">
             <Label text="➕ Thêm / Sửa món" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
@@ -20,8 +27,8 @@
                     <TextField fx:id="menuTitleField" promptText="Ví dụ: Combo Tiệc 1.5tr/mâm" prefHeight="40"/>
                 </VBox>
                 <VBox spacing="8">
-                    <Label text="Giá (VNĐ) *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
-                    <TextField fx:id="menuPriceField" promptText="Ví dụ: 1500000" prefHeight="40"/>
+                    <Label text="Giá (USD) *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="menuPriceField" promptText="Ví dụ: 60.00" prefHeight="40"/>
                 </VBox>
                 <VBox spacing="8">
                     <Label text="Loại *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
@@ -49,14 +56,9 @@
                 <RadioButton fx:id="filterComboBtn" text="Combo" toggleGroup="$menuFilterGroup" userData="combo" styleClass="chip"/>
                 <RadioButton fx:id="filterSingleBtn" text="Món lẻ" toggleGroup="$menuFilterGroup" userData="single" styleClass="chip"/>
             </HBox>
-            <TableView fx:id="menuTable" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colMenuTitle" text="Tên" prefWidth="250"/>
-                    <TableColumn fx:id="colMenuPrice" text="Giá (VNĐ)" prefWidth="150"/>
-                    <TableColumn fx:id="colMenuCategory" text="Loại" prefWidth="100"/>
-                    <TableColumn fx:id="colMenuActions" text="Thao tác" prefWidth="150"/>
-                </columns>
-            </TableView>
+            <ScrollPane fx:id="menuScrollPane" fitToWidth="true" VBox.vgrow="ALWAYS">
+                <FlowPane fx:id="menuGridPane" hgap="16" vgap="16" prefWrapLength="800"/>
+            </ScrollPane>
         </VBox>
     </HBox>
 </VBox>

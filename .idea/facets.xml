@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="FacetManager">
+    <facet type="javafx" name="JavaFX">
+      <configuration>
+        <option name="fxJarPath" value="$USER_HOME$/.m2/repository/org/openjfx/javafx-controls/21.0.2/javafx-controls-21.0.2.jar" />
+      </configuration>
+    </facet>
+  </component>
+</project>
+
