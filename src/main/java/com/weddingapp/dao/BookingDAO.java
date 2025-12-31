@@ -7,7 +7,7 @@ import com.weddingapp.model.MenuItem;
 import com.weddingapp.util.Database;
 
 import java.sql.Connection;
-import java.sql.Date;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -58,7 +58,7 @@ public class BookingDAO {
     public int getTotalTablesForHallOnDate(int hallId, LocalDate date) {
         String sql = "SELECT COALESCE(SUM(tables), 0) AS total_tables FROM bookings WHERE hall_id = ? AND event_date = ?";
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, hallId);
             ps.setString(2, date.toString());
             ResultSet rs = ps.executeQuery();
@@ -74,10 +74,11 @@ public class BookingDAO {
     public Booking save(Booking booking) {
         String sql = "INSERT INTO bookings(customer_id, hall_id, event_date, tables, total, notes) VALUES(?,?,?,?,?,?)";
         try (Connection conn = Database.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, booking.getCustomer().getId());
             ps.setInt(2, booking.getHall().getId());
-            ps.setDate(3, Date.valueOf(booking.getEventDate()));
+            // Use setString to ensure YYYY-MM-DD format in TEXT column
+            ps.setString(3, booking.getEventDate().toString());
             ps.setInt(4, booking.getTables());
             ps.setDouble(5, booking.getTotal());
             ps.setString(6, booking.getNotes());
@@ -120,7 +121,32 @@ public class BookingDAO {
                     rs.getString("hall_name"),
                     rs.getInt("capacity"),
                     rs.getDouble("price_per_table"));
-            LocalDate date = LocalDate.parse(rs.getString("event_date"));
+
+            String dateStr = rs.getString("event_date");
+            LocalDate date;
+            try {
+                // Try standard ISO format first (YYYY-MM-DD)
+                date = LocalDate.parse(dateStr);
+            } catch (Exception e) {
+                // Handle fallback cases
+                try {
+                    // Check if it's a numeric timestamp (epoch millis)
+                    long timestamp = Long.parseLong(dateStr);
+                    date = new java.sql.Date(timestamp).toLocalDate();
+                } catch (NumberFormatException nfe) {
+                    // Fallback for other potential formats, e.g. "YYYY-MM-DD HH:mm:ss"
+                    if (dateStr != null && dateStr.length() >= 10) {
+                        try {
+                            date = LocalDate.parse(dateStr.substring(0, 10));
+                        } catch (Exception ex2) {
+                            throw new RuntimeException("Could not parse date: " + dateStr, e);
+                        }
+                    } else {
+                        throw new RuntimeException("Could not parse date: " + dateStr, e);
+                    }
+                }
+            }
+
             Booking booking = new Booking(
                     rs.getInt("booking_id"),
                     customer,
@@ -136,4 +162,3 @@ public class BookingDAO {
         }
     }
 }
-
