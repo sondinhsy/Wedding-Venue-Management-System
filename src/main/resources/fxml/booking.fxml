@@ -54,6 +54,11 @@
                 <Label fx:id="summaryHallLabel" wrapText="true" style="-fx-font-size: 12px;"/>
                 <Label fx:id="summaryMenuLabel" wrapText="true" style="-fx-font-size: 12px;"/>
                 <Label fx:id="summaryTotalLabel" wrapText="true" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                <Label fx:id="viewDetailsLink" text="Xem chi tiết" 
+                       onMouseClicked="#handleViewBookingDetails"
+                       style="-fx-font-size: 10px; -fx-font-style: italic; -fx-text-fill: #3b82f6; -fx-underline: true; -fx-cursor: hand; -fx-padding: 4 0 0 0;"
+                       onMouseEntered="#handleViewDetailsMouseEnter"
+                       onMouseExited="#handleViewDetailsMouseExit"/>
             </VBox>
             <Button fx:id="saveBookingButton" text="✅ Lưu booking" onAction="#handleSaveBooking" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
                 <tooltip>

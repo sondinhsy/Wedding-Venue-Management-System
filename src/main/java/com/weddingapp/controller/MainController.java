@@ -17,9 +17,12 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -28,6 +31,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -418,45 +422,432 @@ public class MainController {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Chọn món / combo");
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setPrefSize(850, 720);
 
-        FlowPane flow = new FlowPane(10, 10);
-        flow.setPrefWrapLength(480);
-        flow.getStyleClass().add("catalog-pane");
+        // ==== STATE & SELECTION ====
+        ObservableList<MenuItem> currentSelected = menuList.getSelectionModel().getSelectedItems();
+        Map<Integer, MenuItem> menuById = menus.stream()
+                .collect(Collectors.toMap(MenuItem::getId, m -> m, (a, b) -> a));
 
-        Map<MenuItem, ToggleButton> toggleByItem = new HashMap<>();
-        menus.forEach(item -> {
-            ToggleButton btn = new ToggleButton();
-            btn.getStyleClass().add("card-btn");
-            btn.setUserData(item);
-            btn.setSelected(menuList.getSelectionModel().getSelectedItems().contains(item));
+        // Lưu selection theo ID, tách rõ combo vs món lẻ
+        java.util.Set<Integer> selectedComboIds = new java.util.HashSet<>();
+        java.util.Set<Integer> selectedSingleIds = new java.util.HashSet<>();
+        for (MenuItem item : currentSelected) {
+            if ("combo".equalsIgnoreCase(item.getCategory())) {
+                selectedComboIds.add(item.getId());
+            } else {
+                selectedSingleIds.add(item.getId());
+            }
+        }
 
-            Label title = new Label(item.getTitle());
-            title.setStyle("-fx-font-weight: bold;");
-            Label price = new Label(CurrencyFormatter.formatVND(item.getPrice()));
-            Label tag = new Label(item.getCategory().equalsIgnoreCase("combo") ? "Combo" : "Món lẻ");
-            tag.getStyleClass().add("chip");
+        // ==== MODE TOGGLE (COMBO / MÓN LẺ) ====
+        ToggleGroup modeGroup = new ToggleGroup();
+        RadioButton comboModeBtn = new RadioButton("Combo");
+        comboModeBtn.setToggleGroup(modeGroup);
+        comboModeBtn.setUserData("combo");
+        RadioButton singleModeBtn = new RadioButton("Món lẻ");
+        singleModeBtn.setToggleGroup(modeGroup);
+        singleModeBtn.setUserData("single");
+        // Ưu tiên sync với filter hiện tại ở màn Booking (tab chính)
+        if (menuFilterGroup != null && menuFilterGroup.getSelectedToggle() != null) {
+            Object ud = menuFilterGroup.getSelectedToggle().getUserData();
+            if ("combo".equalsIgnoreCase(String.valueOf(ud))) {
+                comboModeBtn.setSelected(true);
+            } else if ("single".equalsIgnoreCase(String.valueOf(ud))) {
+                singleModeBtn.setSelected(true);
+            } else {
+                // Nếu đang là "Tất cả" thì dựa vào selection hiện tại
+                if (!selectedComboIds.isEmpty()) {
+                    comboModeBtn.setSelected(true);
+                } else {
+                    singleModeBtn.setSelected(true);
+                }
+            }
+        } else if (!selectedComboIds.isEmpty()) {
+            comboModeBtn.setSelected(true);
+        } else {
+            singleModeBtn.setSelected(true);
+        }
 
-            VBox box = new VBox(4, title, price, tag);
-            btn.setGraphic(box);
-            toggleByItem.put(item, btn);
-            flow.getChildren().add(btn);
+        HBox modeBox = new HBox(12, new Label("Chế độ:"), comboModeBtn, singleModeBtn);
+        modeBox.setStyle("-fx-padding: 0 0 8 0;");
+
+        // ==== SCROLLABLE LAYOUT (grid card) ====
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
+        VBox sectionsBox = new VBox(16);
+        sectionsBox.setStyle("-fx-padding: 16;");
+        scrollPane.setContent(sectionsBox);
+
+        // OK button chỉ enable khi có selection
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.setDisable(selectedComboIds.isEmpty() && selectedSingleIds.isEmpty());
+
+        // Chuẩn bị dữ liệu cho 2 mode
+        final List<MenuItem> comboItems = menus.stream()
+                .filter(m -> "combo".equalsIgnoreCase(m.getCategory()))
+                .collect(Collectors.toList());
+        // Đảm bảo chỉ còn đúng 3 combo (THƯỜNG, VIP, PREMIUM) nếu tồn tại
+        final List<MenuItem> limitedComboItems = comboItems.stream()
+            .filter(m -> {
+                String t = m.getTitle() != null ? m.getTitle().toLowerCase() : "";
+                return t.contains("thường") || t.contains("thuong")
+                        || t.contains("vip")
+                        || t.contains("premium");
+            })
+            .limit(3)
+            .collect(Collectors.toList());
+
+        List<MenuItem> singleItems = menus.stream()
+                .filter(m -> !"combo".equalsIgnoreCase(m.getCategory()))
+                .collect(Collectors.toList());
+
+        // Helper render theo mode
+        java.util.function.Consumer<String> renderMode = mode -> {
+            sectionsBox.getChildren().clear();
+
+            if ("combo".equalsIgnoreCase(mode)) {
+                Label header = new Label("Combo cố định");
+                header.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+                FlowPane flow = new FlowPane(10, 10);
+                flow.setPrefWrapLength(800);
+
+                for (MenuItem combo : limitedComboItems) {
+                    ToggleButton btn = createComboCatalogButton(
+                            combo,
+                            selectedComboIds.contains(combo.getId()),
+                            selectedComboIds,
+                            selectedSingleIds,
+                            okButton
+                    );
+                    flow.getChildren().add(btn);
+                }
+
+                sectionsBox.getChildren().addAll(header, flow);
+            } else {
+                // Món lẻ: chia rõ theo group với header
+                java.util.function.BiConsumer<String, List<MenuItem>> addSection =
+                        (title, items) -> {
+                            if (items.isEmpty()) return;
+
+                            Label header = new Label(title);
+                            header.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #111827;");
+
+                            FlowPane flow = new FlowPane(10, 10);
+                            flow.setPrefWrapLength(800);
+
+                            for (MenuItem mi : items) {
+                                // Giá món lẻ: generate ngẫu nhiên ổn định theo tên
+                                generateStablePrice(mi);
+                                boolean isSelected = selectedSingleIds.contains(mi.getId());
+                                ToggleButton btn = createSingleCatalogButton(
+                                        mi,
+                                        isSelected,
+                                        selectedSingleIds,
+                                        okButton
+                                );
+                                flow.getChildren().add(btn);
+                            }
+
+                            sectionsBox.getChildren().addAll(header, flow);
+                        };
+
+                List<MenuItem> appetizers = singleItems.stream()
+                        .filter(m -> "appetizer".equals(m.getGroup()))
+                        .collect(Collectors.toList());
+                List<MenuItem> mains = singleItems.stream()
+                        .filter(m -> "main".equals(m.getGroup()))
+                        .collect(Collectors.toList());
+                List<MenuItem> sides = singleItems.stream()
+                        .filter(m -> "side".equals(m.getGroup()))
+                        .collect(Collectors.toList());
+                List<MenuItem> drinks = singleItems.stream()
+                        .filter(m -> "drink".equals(m.getGroup()))
+                        .collect(Collectors.toList());
+                List<MenuItem> desserts = singleItems.stream()
+                        .filter(m -> "dessert".equals(m.getGroup()))
+                        .collect(Collectors.toList());
+
+                addSection.accept("Khai vị", appetizers);
+                addSection.accept("Món chính", mains);
+                addSection.accept("Món phụ", sides);
+                addSection.accept("Đồ uống", drinks);
+                addSection.accept("Tráng miệng", desserts);
+            }
+        };
+
+        // Lắng nghe đổi mode
+        modeGroup.selectedToggleProperty().addListener((obs, old, val) -> {
+            String mode = val != null && val.getUserData() != null
+                    ? val.getUserData().toString()
+                    : "single";
+
+            // Đồng bộ ngược lại ra 3 nút filter bên ngoài (Tất cả / Combo / Món lẻ)
+            if (menuFilterGroup != null) {
+                if ("combo".equalsIgnoreCase(mode) && filterComboBtn != null) {
+                    menuFilterGroup.selectToggle(filterComboBtn);
+                } else if ("single".equalsIgnoreCase(mode) && filterSingleBtn != null) {
+                    menuFilterGroup.selectToggle(filterSingleBtn);
+                } else if (filterAllBtn != null) {
+                    menuFilterGroup.selectToggle(filterAllBtn);
+                }
+                // applyMenuFilter() đã được gắn listener trong initialize()
+            }
+
+            renderMode.accept(mode);
         });
 
-        dialog.getDialogPane().setContent(flow);
+        // Render lần đầu
+        String initialMode = modeGroup.getSelectedToggle() != null
+                && modeGroup.getSelectedToggle().getUserData() != null
+                ? modeGroup.getSelectedToggle().getUserData().toString()
+                : "single";
+        renderMode.accept(initialMode);
+
+        VBox mainContainer = new VBox(8);
+        mainContainer.getChildren().addAll(modeBox, scrollPane);
+        VBox.setVgrow(scrollPane, javafx.scene.layout.Priority.ALWAYS);
+        dialog.getDialogPane().setContent(mainContainer);
+
+        // Show dialog và apply chọn
         dialog.showAndWait().ifPresent(res -> {
             if (res == ButtonType.OK) {
                 menuList.getSelectionModel().clearSelection();
-                toggleByItem.forEach((item, toggle) -> {
-                    if (toggle.isSelected()) {
+                for (MenuItem item : menus) {
+                    if (selectedComboIds.contains(item.getId()) || selectedSingleIds.contains(item.getId())) {
                         int idx = menus.indexOf(item);
                         if (idx >= 0) {
                             menuList.getSelectionModel().select(idx);
                         }
                     }
-                });
+                }
                 updateTotalPreview();
             }
+            // Sau khi đóng popup, sync lại filter theo mode cuối cùng
+            if (modeGroup.getSelectedToggle() != null && menuFilterGroup != null) {
+                Object md = modeGroup.getSelectedToggle().getUserData();
+                if ("combo".equalsIgnoreCase(String.valueOf(md)) && filterComboBtn != null) {
+                    menuFilterGroup.selectToggle(filterComboBtn);
+                } else if ("single".equalsIgnoreCase(String.valueOf(md)) && filterSingleBtn != null) {
+                    menuFilterGroup.selectToggle(filterSingleBtn);
+                }
+            }
         });
+    }
+
+    /**
+     * Card cho một combo (click mở dialog chi tiết combo, không chọn ngay).
+     */
+    private ToggleButton createComboCatalogButton(MenuItem item,
+                                                  boolean isSelected,
+                                                  java.util.Set<Integer> selectedComboIds,
+                                                  java.util.Set<Integer> selectedSingleIds,
+                                                  Button okButton) {
+        ToggleButton btn = new ToggleButton();
+        btn.getStyleClass().add("card-btn");
+        btn.setUserData(item);
+        btn.setSelected(isSelected);
+
+        HBox contentBox = new HBox(8);
+        contentBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        // Tick icon
+        Label checkIcon = new Label(isSelected ? "✓" : "");
+        checkIcon.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #059669;");
+        checkIcon.setPrefWidth(16);
+
+        VBox textBox = new VBox(4);
+        Label title = new Label(item.getTitle());
+        title.setStyle("-fx-font-weight: bold;");
+        Label price = new Label(String.format("$%.0f", item.getPrice()));
+        Label tag = new Label("Combo");
+        tag.getStyleClass().add("chip");
+        textBox.getChildren().addAll(title, price, tag);
+
+        contentBox.getChildren().addAll(checkIcon, textBox);
+        btn.setGraphic(contentBox);
+
+        btn.setOnAction(e -> {
+            // Mở dialog chi tiết combo, không chọn ngay từ card
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/combo-detail-dialog.fxml"));
+                DialogPane pane = loader.load();
+                com.weddingapp.controller.ComboDetailDialogController controller = loader.getController();
+                controller.setCombo(item);
+
+                Dialog<ButtonType> detailDialog = new Dialog<>();
+                detailDialog.setTitle("Chi tiết combo");
+                detailDialog.setDialogPane(pane);
+
+                detailDialog.showAndWait().ifPresent(result -> {
+                    if (result.getButtonData() == ButtonBar.ButtonData.OK_DONE) {
+                        // Người dùng xác nhận "Chọn combo này"
+                        selectedSingleIds.clear();
+                        selectedComboIds.clear();
+                        selectedComboIds.add(item.getId());
+                        btn.setSelected(true);
+                        updateCheckIcon(btn, true);
+                        if (okButton != null) {
+                            okButton.setDisable(false);
+                        }
+                    } else {
+                        // Không chọn combo -> giữ trạng thái cũ
+                        btn.setSelected(selectedComboIds.contains(item.getId()));
+                        updateCheckIcon(btn, btn.isSelected());
+                    }
+                });
+            } catch (IOException ex) {
+                showError("Không thể mở chi tiết combo: " + ex.getMessage());
+                btn.setSelected(false);
+                updateCheckIcon(btn, false);
+            }
+        });
+
+        return btn;
+    }
+
+    /**
+     * Card cho một món lẻ (select trực tiếp, có limit theo category).
+     */
+    private ToggleButton createSingleCatalogButton(MenuItem item,
+                                                   boolean isSelected,
+                                                   java.util.Set<Integer> selectedSingleIds,
+                                                   Button okButton) {
+        ToggleButton btn = new ToggleButton();
+        btn.getStyleClass().add("card-btn");
+        btn.setUserData(item);
+        btn.setSelected(isSelected);
+
+        HBox contentBox = new HBox(8);
+        contentBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        Label checkIcon = new Label(isSelected ? "✓" : "");
+        checkIcon.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #059669;");
+        checkIcon.setPrefWidth(16);
+
+        VBox textBox = new VBox(4);
+        Label title = new Label(item.getTitle());
+        title.setStyle("-fx-font-weight: bold;");
+        Label price = new Label(String.format("$%.0f", item.getPrice()));
+        String group = item.getGroup();
+        Label tag = new Label(getGroupLabel(group));
+        tag.getStyleClass().add("chip");
+        textBox.getChildren().addAll(title, price, tag);
+
+        contentBox.getChildren().addAll(checkIcon, textBox);
+        btn.setGraphic(contentBox);
+
+        btn.setOnAction(e -> {
+            boolean wasSelected = btn.isSelected();
+
+            String g = item.getGroup();
+            int currentCount = (int) selectedSingleIds.stream()
+                    .map(id -> menus.stream().filter(m -> m.getId() == id).findFirst().orElse(null))
+                    .filter(m -> m != null && g.equals(m.getGroup()))
+                    .count();
+
+            int limit = getGroupLimit(g);
+
+            if (wasSelected) {
+                // Bỏ chọn
+                selectedSingleIds.remove(item.getId());
+                btn.setSelected(false);
+            } else {
+                if (currentCount >= limit) {
+                    btn.setSelected(false);
+                    showError("Đã đạt tối đa " + limit + " cho " + getGroupLabel(g));
+                    e.consume();
+                    return;
+                }
+                selectedSingleIds.add(item.getId());
+                btn.setSelected(true);
+            }
+
+            updateCheckIcon(btn, btn.isSelected());
+            if (okButton != null) {
+                boolean hasSelection = !selectedSingleIds.isEmpty();
+                okButton.setDisable(!hasSelection);
+            }
+        });
+
+        return btn;
+    }
+    
+    private int getGroupLimit(String group) {
+        switch (group) {
+            case "appetizer": return 2;
+            case "main": return 6;
+            case "side": return 2;
+            case "drink": return 1;
+            case "dessert": return 1;
+            default: return 999;
+        }
+    }
+    
+    private String getGroupLabel(String group) {
+        switch (group) {
+            case "appetizer": return "Khai vị";
+            case "main": return "Món chính";
+            case "side": return "Món phụ";
+            case "drink": return "Đồ uống";
+            case "dessert": return "Tráng miệng";
+            default: return group;
+        }
+    }
+    
+    private void updateCheckIcon(ToggleButton btn, boolean selected) {
+        HBox contentBox = (HBox) btn.getGraphic();
+        Label checkIcon = (Label) contentBox.getChildren().get(0);
+        checkIcon.setText(selected ? "✓" : "");
+    }
+
+    /**
+     * Sinh giá món lẻ ngẫu nhiên nhưng ổn định theo tên, theo khoảng giá từng loại.
+     */
+    private double generateStablePrice(MenuItem item) {
+        String name = item.getTitle() != null ? item.getTitle() : "";
+        int hash = Math.abs(name.hashCode());
+        String group = item.getGroup();
+        String lower = name.toLowerCase();
+
+        java.util.function.BiFunction<Integer, Integer, Double> pickInRange = (min, max) -> {
+            int range = max - min + 1;
+            return (double) (min + (hash % range));
+        };
+
+        double price;
+        if ("drink".equals(group)) {
+            // Đồ uống: chia nhỏ theo loại
+            if (lower.contains("bia") || lower.contains("beer")) {
+                price = pickInRange.apply(2, 8);
+            } else if (lower.contains("rượu") || lower.contains("vodka") || lower.contains("vang") || lower.contains("wine")) {
+                price = pickInRange.apply(10, 60);
+            } else {
+                // Nước ngọt
+                price = pickInRange.apply(2, 6);
+            }
+        } else if ("appetizer".equals(group)) {
+            price = pickInRange.apply(8, 20);
+        } else if ("side".equals(group)) {
+            price = pickInRange.apply(6, 18);
+        } else {
+            // Món chính
+            boolean premium = lower.contains("hải sản") || lower.contains("seafood")
+                    || lower.contains("bò mỹ") || lower.contains("us beef")
+                    || lower.contains("wagyu")
+                    || lower.contains("tôm hùm") || lower.contains("lobster");
+            if (premium) {
+                price = pickInRange.apply(35, 120);
+            } else {
+                price = pickInRange.apply(15, 40);
+            }
+        }
+
+        item.setPrice(price);
+        return price;
     }
 
     private void clearBookingForm() {
@@ -543,4 +934,5 @@ public class MainController {
         tabPane.getSelectionModel().select(4);
     }
 }
+
 

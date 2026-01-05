@@ -20,11 +20,11 @@ public class ComboItemDAO {
         List<ComboItem> items = new ArrayList<>();
         String sql = """
                 SELECT ci.combo_id, ci.item_id, ci.quantity,
-                       m.title, m.price, COALESCE(m.category, 'single') AS category
+                       m.title, m.price, COALESCE(m.category, 'single') AS category, m.sub_category
                 FROM combo_items ci
                 JOIN menu_items m ON ci.item_id = m.id
                 WHERE ci.combo_id = ?
-                ORDER BY m.title
+                ORDER BY COALESCE(m.sub_category, ''), m.title
                 """;
         try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -36,6 +36,10 @@ public class ComboItemDAO {
                         rs.getString("title"),
                         rs.getDouble("price"),
                         rs.getString("category"));
+                String subCategory = rs.getString("sub_category");
+                if (subCategory != null) {
+                    item.setSubCategory(subCategory);
+                }
                 ComboItem comboItem = new ComboItem(
                         rs.getInt("combo_id"),
                         item,

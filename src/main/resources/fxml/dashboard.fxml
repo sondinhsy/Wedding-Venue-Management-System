@@ -27,8 +27,9 @@
             <Button text="🏠 Dashboard" onAction="#showDashboard" styleClass="nav-menu-btn" fx:id="btnDashboard"/>
             <Button text="🏛️ Quản lý Sảnh" onAction="#showHallManagement" styleClass="nav-menu-btn" fx:id="btnHall"/>
             <Button text="🍽️ Quản lý Menu" onAction="#showMenuManagement" styleClass="nav-menu-btn" fx:id="btnMenu"/>
-            <Button text="📅 Booking / Đặt chỗ" onAction="#showBooking" styleClass="nav-menu-btn" fx:id="btnBooking"/>
             <Button text="👥 Quản lý Khách hàng" onAction="#showCustomerManagement" styleClass="nav-menu-btn" fx:id="btnCustomer"/>
+            <Button text="📅 Booking / Đặt chỗ" onAction="#showBooking" styleClass="nav-menu-btn" fx:id="btnBooking"/>
+            <Button text="💰 Phát sinh / Dịch vụ" onAction="#showExtrasServices" styleClass="nav-menu-btn" fx:id="btnExtras"/>
             <Button text="💰 Hóa đơn / Thống kê" onAction="#showInvoice" styleClass="nav-menu-btn" fx:id="btnInvoice"/>
         </VBox>
     </left>
