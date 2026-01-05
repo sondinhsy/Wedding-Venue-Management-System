@@ -10,7 +10,7 @@
 
 /* ========== Top Navigation Bar ========== */
 .top-bar {
-    -fx-background-color: linear-gradient(to right, #1e3a8a, #3b82f6);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #1e3a8a, #3b82f6);
     -fx-background-radius: 0;
     -fx-padding: 12 20;
     -fx-spacing: 12;
@@ -171,7 +171,7 @@ Button:pressed {
 }
 
 /* ========== Form Controls ========== */
-TextField, TextArea, ComboBox, DatePicker, Spinner {
+TextField, PasswordField, TextArea, ComboBox, DatePicker, Spinner {
     -fx-background-color: white;
     -fx-border-color: #cbd5e1;
     -fx-border-width: 1.5;
@@ -181,12 +181,12 @@ TextField, TextArea, ComboBox, DatePicker, Spinner {
     -fx-font-size: 13px;
 }
 
-TextField:focused, TextArea:focused, ComboBox:focused, DatePicker:focused {
+TextField:focused, PasswordField:focused, TextArea:focused, ComboBox:focused, DatePicker:focused {
     -fx-border-color: #3b82f6;
     -fx-effect: dropshadow(one-pass-box, rgba(59,130,246,0.2), 4, 0, 0, 0);
 }
 
-TextField:hover, TextArea:hover, ComboBox:hover, DatePicker:hover {
+TextField:hover, PasswordField:hover, TextArea:hover, ComboBox:hover, DatePicker:hover {
     -fx-border-color: #94a3b8;
 }
 
@@ -398,7 +398,7 @@ TextArea.export-status {
 
 /* ========== Login Page ========== */
 .login-root {
-    -fx-background-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -fx-background-color: linear-gradient(from 0% 100% to 100% 0%, #667eea 0%, #764ba2 100%);
 }
 
 .login-container {
@@ -424,7 +424,7 @@ TextArea.export-status {
 }
 
 .login-button {
-    -fx-background-color: linear-gradient(to right, #1e3a8a, #3b82f6);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #1e3a8a, #3b82f6);
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
@@ -434,12 +434,12 @@ TextArea.export-status {
 }
 
 .login-button:hover {
-    -fx-background-color: linear-gradient(to right, #1e40af, #2563eb);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #1e40af, #2563eb);
     -fx-effect: dropshadow(one-pass-box, rgba(59,130,246,0.5), 10, 0, 0, 4);
 }
 
 .login-button:pressed {
-    -fx-background-color: linear-gradient(to right, #1e3a8a, #1d4ed8);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #1e3a8a, #1d4ed8);
 }
 
 .login-hint {

@@ -62,11 +62,13 @@
     <Label text="📋 Danh sách booking" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
     <TableView fx:id="invoiceTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colInvoiceId" text="Mã" prefWidth="80"/>
+            <TableColumn fx:id="colInvoiceId" text="Mã" prefWidth="90"/>
             <TableColumn fx:id="colInvoiceCustomer" text="Khách hàng" prefWidth="200"/>
             <TableColumn fx:id="colInvoiceHall" text="Sảnh" prefWidth="150"/>
             <TableColumn fx:id="colInvoiceDate" text="Ngày tổ chức" prefWidth="120"/>
             <TableColumn fx:id="colInvoiceTotal" text="Tổng tiền" prefWidth="150"/>
+            <TableColumn fx:id="colInvoicePaymentStatus" text="Trạng thái thanh toán" prefWidth="140"/>
+            <TableColumn fx:id="colInvoiceActions" text="Thao tác" prefWidth="230"/>
         </columns>
     </TableView>
 </VBox>

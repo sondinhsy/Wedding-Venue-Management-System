@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<DialogPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.weddingapp.controller.ComboDetailDialogController"
+            prefWidth="600" prefHeight="500">
+    <content>
+        <VBox spacing="16" fx:id="contentVBox">
+            <padding>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </padding>
+            
+            <!-- Header: Tên combo và giá -->
+            <VBox spacing="4">
+                <Label fx:id="comboTitleLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                <Label fx:id="comboPriceLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
+            </VBox>
+            
+            <Separator/>
+            
+            <!-- Danh sách món theo nhóm -->
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+                <VBox spacing="12" fx:id="itemsVBox">
+                    <!-- Sẽ được populate từ controller -->
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </content>
+    <buttonTypes>
+        <ButtonType fx:id="selectButtonType" text="Chọn combo này" buttonData="OK_DONE"/>
+        <ButtonType text="Đóng" buttonData="CANCEL_CLOSE"/>
+    </buttonTypes>
+</DialogPane>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.ExtrasServicesController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    
+    <!-- HEADER -->
+    <Label text="💰 Chọn phát sinh và dịch vụ khác" 
+           style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 0 0 16 0;"/>
+    
+    <!-- HÀNG 1: CHỌN BOOKING (COMPACT) -->
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label text="Chọn booking:" style="-fx-font-size: 13px; -fx-text-fill: #475569;"/>
+        <ComboBox fx:id="bookingCombo" promptText="Chọn booking" prefWidth="350" prefHeight="40">
+            <tooltip>
+                <Tooltip text="Chọn booking để thêm phát sinh và dịch vụ"/>
+            </tooltip>
+        </ComboBox>
+        <TextField fx:id="searchBookingField" promptText="Tìm kiếm booking..." prefWidth="200" prefHeight="40">
+            <tooltip>
+                <Tooltip text="Tìm kiếm booking theo tên khách hàng hoặc ID"/>
+            </tooltip>
+        </TextField>
+    </HBox>
+    
+    <!-- Empty State (chỉ hiện khi chưa chọn booking) -->
+    <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+        <Label fx:id="emptyStateLabel" text="Vui lòng chọn booking để thêm phát sinh" 
+               style="-fx-font-size: 14px; -fx-text-fill: #94a3b8; -fx-padding: 20 0;"/>
+    </VBox>
+    
+    <!-- CONTENT CONTAINER (chỉ hiện khi đã chọn booking) -->
+    <VBox fx:id="contentContainer" spacing="16" VBox.vgrow="ALWAYS" visible="false" managed="false">
+        <!-- HÀNG 2: 2 NỬA CÂN BẰNG (50-50) - THÊM BÀN VÀ DỊCH VỤ -->
+        <GridPane hgap="20" vgap="16">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+            </columnConstraints>
+            <children>
+            <!-- NỬA TRÁI: THÊM BÀN -->
+            <VBox spacing="12" styleClass="card" GridPane.columnIndex="0">
+                <Label text="➕ Thêm bàn" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                
+                <!-- Component số bàn thêm: (-) [input] (+) -->
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Button fx:id="decreaseTableBtn" text="−" prefWidth="40" prefHeight="40" 
+                            style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    <TextField fx:id="tableQuantityField" prefWidth="80" prefHeight="40" 
+                               style="-fx-alignment: CENTER; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                    <Button fx:id="increaseTableBtn" text="+" prefWidth="40" prefHeight="40" 
+                            style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    <Button fx:id="addTableBtn" text="Thêm" prefWidth="100" prefHeight="40"/>
+                </HBox>
+                
+                <!-- Thông tin đơn giá menu -->
+                <Label fx:id="pricePerTableLabel" text="Đơn giá menu đã đặt: 0 $/bàn" 
+                       style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-padding: 4 0;"/>
+            </VBox>
+            
+            <!-- NỬA PHẢI: DỊCH VỤ -->
+            <VBox spacing="12" styleClass="card" GridPane.columnIndex="1">
+                <Label text="🎵 Dịch vụ" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                
+                <!-- 2 checkbox MC và Âm nhạc -->
+                <VBox spacing="8">
+                    <CheckBox fx:id="mcCheckBox" text="MC 30$" style="-fx-font-size: 14px;">
+                        <tooltip>
+                            <Tooltip text="Dịch vụ MC"/>
+                        </tooltip>
+                    </CheckBox>
+                    <CheckBox fx:id="musicCheckBox" text="Âm nhạc 30$" style="-fx-font-size: 14px;">
+                        <tooltip>
+                            <Tooltip text="Dịch vụ âm nhạc"/>
+                        </tooltip>
+                    </CheckBox>
+                </VBox>
+            </VBox>
+            </children>
+        </GridPane>
+        
+        <!-- HÀNG 3: THÔNG TIN TÀI CHÍNH -->
+        <VBox spacing="12" styleClass="card">
+            <Label text="💰 Thông tin thanh toán" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <GridPane hgap="20" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                    <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints/>
+                    <RowConstraints/>
+                    <RowConstraints/>
+                </rowConstraints>
+                <children>
+                <Label text="Số tiền đơn đặt gốc:" GridPane.columnIndex="0" GridPane.rowIndex="0" 
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                <Label fx:id="originalTotalLabel" text="0 đ" GridPane.columnIndex="1" GridPane.rowIndex="0" 
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                
+                <Label text="Số tiền đã trả trước:" GridPane.columnIndex="0" GridPane.rowIndex="1" 
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                <Label fx:id="paidAmountLabel" text="0 đ" GridPane.columnIndex="1" GridPane.rowIndex="1" 
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #059669;"/>
+                
+                <Label text="Số tiền còn lại chưa trả:" GridPane.columnIndex="0" GridPane.rowIndex="2" 
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                <Label fx:id="remainingLabel" text="0 đ" GridPane.columnIndex="1" GridPane.rowIndex="2" 
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
+                </children>
+            </GridPane>
+            
+            <Separator style="-fx-padding: 8 0;"/>
+            
+            <GridPane hgap="20" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                    <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                </columnConstraints>
+                <rowConstraints>
+                    <RowConstraints/>
+                    <RowConstraints/>
+                </rowConstraints>
+                <children>
+                <Label text="Phát sinh &amp; dịch vụ:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                       style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                <Label fx:id="extrasTotalLabel" text="0 đ" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                
+                <Label text="Tổng số tiền cần phải trả:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                <Label fx:id="finalTotalLabel" text="0 đ" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                       style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #dc2626;"/>
+                </children>
+            </GridPane>
+        </VBox>
+        
+        <!-- HÀNG 4: NÚT XEM CHI TIẾT + TỔNG + LƯU -->
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <Button fx:id="viewDetailsBtn" text="👁️ Xem chi tiết" prefHeight="36" 
+                    styleClass="ghost-btn" onAction="#handleViewDetails">
+                <tooltip>
+                    <Tooltip text="Xem danh sách phát sinh và dịch vụ đã thêm"/>
+                </tooltip>
+            </Button>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button fx:id="saveBtn" text="💾 Lưu phát sinh" prefWidth="180" prefHeight="44"
+                    style="-fx-font-size: 14px; -fx-font-weight: bold;" onAction="#handleSave">
+                <tooltip>
+                    <Tooltip text="Lưu tất cả phát sinh và dịch vụ đã thêm"/>
+                </tooltip>
+            </Button>
+        </HBox>
+    </VBox>
+</VBox>

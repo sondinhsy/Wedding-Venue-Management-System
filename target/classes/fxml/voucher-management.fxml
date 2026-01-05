@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.VoucherManagementController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="🎫 Quản lý Voucher" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <Label text="Quản lý mã giảm giá và khuyến mãi" styleClass="hint"/>
+
+    <VBox spacing="12" styleClass="card">
+        <Label text="Danh sách Voucher" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+        <Label text="Các voucher hiện có trong hệ thống (cố định)" style="-fx-text-fill: #64748b; -fx-font-size: 12px;"/>
+        
+        <TableView fx:id="voucherTable" prefHeight="400" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colVoucherCode" text="Mã voucher" prefWidth="150"/>
+                <TableColumn fx:id="colVoucherDescription" text="Mô tả" prefWidth="250"/>
+                <TableColumn fx:id="colVoucherType" text="Loại" prefWidth="100"/>
+                <TableColumn fx:id="colVoucherValue" text="Giá trị" prefWidth="150"/>
+                <TableColumn fx:id="colVoucherSeason" text="Mùa áp dụng" prefWidth="150"/>
+            </columns>
+        </TableView>
+        
+        <HBox spacing="8">
+            <Label text="💡 Lưu ý: Các voucher này được áp dụng tự động khi nhập mã trong form đặt chỗ." 
+                   style="-fx-text-fill: #059669; -fx-font-size: 11px; -fx-wrap-text: true;"/>
+        </HBox>
+    </VBox>
+</VBox>

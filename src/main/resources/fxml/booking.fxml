@@ -27,7 +27,13 @@
             <Label fx:id="hallInfoLabel" text="Chọn sảnh để xem chi tiết" styleClass="hint"/>
             <Label text="Số bàn *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
             <Spinner fx:id="tableSpinner" prefWidth="300"/>
-            <Label text="Ghi chú" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <Label text="Áp mã voucher" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <HBox spacing="8">
+                <TextField fx:id="voucherCodeField" promptText="Nhập mã voucher" prefWidth="200"/>
+                <Button text="Áp dụng" onAction="#handleApplyVoucher" prefWidth="100"/>
+            </HBox>
+            <Label fx:id="voucherStatusLabel" text="" style="-fx-font-size: 11px; -fx-text-fill: #64748b;"/>
+            <Label text="Ghi chú" style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-padding: 8 0 0 0;"/>
             <TextArea fx:id="notesArea" promptText="Yêu cầu đặc biệt, ghi chú..." prefRowCount="4" prefWidth="300"/>
         </VBox>
         <VBox spacing="12" GridPane.columnIndex="1">
@@ -53,7 +59,13 @@
                 <Label text="📋 Tóm tắt đơn đặt chỗ" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
                 <Label fx:id="summaryHallLabel" wrapText="true" style="-fx-font-size: 12px;"/>
                 <Label fx:id="summaryMenuLabel" wrapText="true" style="-fx-font-size: 12px;"/>
+                <Label fx:id="summaryVoucherLabel" wrapText="true" style="-fx-font-size: 12px;"/>
                 <Label fx:id="summaryTotalLabel" wrapText="true" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                <Label fx:id="viewDetailsLink" text="Xem chi tiết" 
+                       onMouseClicked="#handleViewBookingDetails"
+                       style="-fx-font-size: 10px; -fx-font-style: italic; -fx-text-fill: #3b82f6; -fx-underline: true; -fx-cursor: hand; -fx-padding: 4 0 0 0;"
+                       onMouseEntered="#handleViewDetailsMouseEnter"
+                       onMouseExited="#handleViewDetailsMouseExit"/>
             </VBox>
             <Button fx:id="saveBookingButton" text="✅ Lưu booking" onAction="#handleSaveBooking" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
                 <tooltip>

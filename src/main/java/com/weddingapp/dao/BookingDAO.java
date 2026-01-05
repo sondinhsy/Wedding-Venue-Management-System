@@ -21,7 +21,8 @@ public class BookingDAO {
     public List<Booking> findAll() {
         Map<Integer, Booking> bookings = new HashMap<>();
         String sql = """
-                SELECT b.id as booking_id, b.event_date, b.tables, b.total, b.notes,
+                SELECT b.id as booking_id, b.booking_code, b.event_date, b.tables, b.total, b.paid_amount, b.payment_status, b.notes,
+                       b.voucher_code, b.voucher_type, b.voucher_value,
                        c.id as customer_id, c.name as customer_name, c.phone, c.email,
                        h.id as hall_id, h.name as hall_name, h.capacity, h.price_per_table,
                        m.id as menu_id, m.title as menu_title, m.price as menu_price, m.category as menu_category
@@ -36,7 +37,7 @@ public class BookingDAO {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 int bookingId = rs.getInt("booking_id");
-                Booking booking = bookings.computeIfAbsent(bookingId, id -> mapBooking(rs));
+                Booking booking = bookings.computeIfAbsent(bookingId, id -> mapBooking(rs, conn));
                 int menuId = rs.getInt("menu_id");
                 if (menuId > 0) {
                     booking.getMenuItems().add(new MenuItem(
@@ -72,16 +73,43 @@ public class BookingDAO {
     }
 
     public Booking save(Booking booking) {
-        String sql = "INSERT INTO bookings(customer_id, hall_id, event_date, tables, total, notes) VALUES(?,?,?,?,?,?)";
+        if (booking.getId() > 0) {
+            return update(booking);
+        }
+        // Chỉ tính 20% deposit nếu status là IN_PROGRESS hoặc COMPLETED
+        // Nếu status là PENDING thì paidAmount = 0
+        if (booking.getPaymentStatus() == Booking.PaymentStatus.IN_PROGRESS || 
+            booking.getPaymentStatus() == Booking.PaymentStatus.COMPLETED) {
+            if (booking.getPaidAmount() == 0.0) {
+                double deposit = booking.getTotal() * 0.20;
+                booking.setPaidAmount(deposit);
+            }
+        } else {
+            // PENDING: reset về 0
+            booking.setPaidAmount(0.0);
+        }
+        
+        String sql = "INSERT INTO bookings(customer_id, hall_id, event_date, tables, total, paid_amount, payment_status, notes, booking_code, voucher_code, voucher_type, voucher_value) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = Database.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            // Generate random 5-digit booking code if not set
+            if (booking.getBookingCode() == null || booking.getBookingCode().isEmpty()) {
+                String bookingCode = generateRandomBookingCode(conn);
+                booking.setBookingCode(bookingCode);
+            }
             ps.setInt(1, booking.getCustomer().getId());
             ps.setInt(2, booking.getHall().getId());
             // Use setString to ensure YYYY-MM-DD format in TEXT column
             ps.setString(3, booking.getEventDate().toString());
             ps.setInt(4, booking.getTables());
             ps.setDouble(5, booking.getTotal());
-            ps.setString(6, booking.getNotes());
+            ps.setDouble(6, booking.getPaidAmount());
+            ps.setString(7, booking.getPaymentStatus() != null ? booking.getPaymentStatus().name() : "PENDING");
+            ps.setString(8, booking.getNotes());
+            ps.setString(9, booking.getBookingCode());
+            ps.setString(10, booking.getVoucherCode());
+            ps.setString(11, booking.getVoucherType());
+            ps.setObject(12, booking.getVoucherValue());
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if (keys.next()) {
@@ -91,6 +119,146 @@ public class BookingDAO {
             return booking;
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    public Booking update(Booking booking) {
+        // Generate booking code if not set
+        if (booking.getBookingCode() == null || booking.getBookingCode().isEmpty()) {
+            try (Connection conn = Database.getConnection()) {
+                String bookingCode = generateRandomBookingCode(conn);
+                booking.setBookingCode(bookingCode);
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        
+        String sql = "UPDATE bookings SET customer_id=?, hall_id=?, event_date=?, tables=?, total=?, paid_amount=?, payment_status=?, notes=?, booking_code=?, voucher_code=?, voucher_type=?, voucher_value=? WHERE id=?";
+        try (Connection conn = Database.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, booking.getCustomer().getId());
+                ps.setInt(2, booking.getHall().getId());
+                ps.setString(3, booking.getEventDate().toString());
+                ps.setInt(4, booking.getTables());
+                ps.setDouble(5, booking.getTotal());
+                ps.setDouble(6, booking.getPaidAmount());
+                ps.setString(7, booking.getPaymentStatus() != null ? booking.getPaymentStatus().name() : "PENDING");
+                ps.setString(8, booking.getNotes());
+                ps.setString(9, booking.getBookingCode());
+                ps.setString(10, booking.getVoucherCode());
+                ps.setString(11, booking.getVoucherType());
+                ps.setObject(12, booking.getVoucherValue());
+                ps.setInt(13, booking.getId());
+                ps.executeUpdate();
+            }
+            // Delete old menu selections and insert new ones
+            deleteMenuSelections(conn, booking.getId());
+            insertMenuSelections(conn, booking);
+            return booking;
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public void updatePaymentStatus(int bookingId, Booking.PaymentStatus status) {
+        String sql = "UPDATE bookings SET payment_status=? WHERE id=?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ps.setInt(2, bookingId);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public void updatePaymentStatusAndAmount(int bookingId, Booking.PaymentStatus status, double paidAmount) {
+        String sql = "UPDATE bookings SET payment_status=?, paid_amount=? WHERE id=?";
+        try (Connection conn = Database.getConnection();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status.name());
+            ps.setDouble(2, paidAmount);
+            ps.setInt(3, bookingId);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public Booking findById(int bookingId) {
+        String sql = """
+                SELECT b.id as booking_id, b.booking_code, b.event_date, b.tables, b.total, b.paid_amount, b.payment_status, b.notes,
+                       b.voucher_code, b.voucher_type, b.voucher_value,
+                       c.id as customer_id, c.name as customer_name, c.phone, c.email,
+                       h.id as hall_id, h.name as hall_name, h.capacity, h.price_per_table,
+                       m.id as menu_id, m.title as menu_title, m.price as menu_price, m.category as menu_category
+                FROM bookings b
+                JOIN customers c ON b.customer_id = c.id
+                JOIN halls h ON b.hall_id = h.id
+                LEFT JOIN booking_menu bm ON b.id = bm.booking_id
+                LEFT JOIN menu_items m ON bm.menu_item_id = m.id
+                WHERE b.id = ?
+                """;
+        Map<Integer, Booking> bookings = new HashMap<>();
+        try (Connection conn = Database.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("booking_id");
+                Booking booking = bookings.computeIfAbsent(id, i -> mapBooking(rs, conn));
+                int menuId = rs.getInt("menu_id");
+                if (menuId > 0) {
+                    booking.getMenuItems().add(new MenuItem(
+                            menuId,
+                            rs.getString("menu_title"),
+                            rs.getDouble("menu_price"),
+                            rs.getString("menu_category")));
+                }
+            }
+            return bookings.isEmpty() ? null : bookings.values().iterator().next();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public void delete(int bookingId) {
+        try (Connection conn = Database.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Xóa extras services (có thể có cascade nhưng để chắc chắn)
+                String deleteExtrasSql = "DELETE FROM extras_services WHERE booking_id=?";
+                try (PreparedStatement ps = conn.prepareStatement(deleteExtrasSql)) {
+                    ps.setInt(1, bookingId);
+                    ps.executeUpdate();
+                }
+                
+                // Xóa menu selections
+                deleteMenuSelections(conn, bookingId);
+                
+                // Xóa booking
+                String deleteBookingSql = "DELETE FROM bookings WHERE id=?";
+                try (PreparedStatement ps = conn.prepareStatement(deleteBookingSql)) {
+                    ps.setInt(1, bookingId);
+                    ps.executeUpdate();
+                }
+                
+                conn.commit();
+            } catch (SQLException ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException ex) {
+            throw new RuntimeException("Error deleting booking " + bookingId, ex);
+        }
+    }
+
+    private void deleteMenuSelections(Connection conn, int bookingId) throws SQLException {
+        String sql = "DELETE FROM booking_menu WHERE booking_id=?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, bookingId);
+            ps.executeUpdate();
         }
     }
 
@@ -109,7 +277,7 @@ public class BookingDAO {
         }
     }
 
-    private Booking mapBooking(ResultSet rs) {
+    private Booking mapBooking(ResultSet rs, Connection conn) {
         try {
             Customer customer = new Customer(
                     rs.getInt("customer_id"),
@@ -147,6 +315,29 @@ public class BookingDAO {
                 }
             }
 
+            double paidAmount = 0.0;
+            try {
+                // Try to get paid_amount column, if it doesn't exist, default to 0.0
+                paidAmount = rs.getDouble("paid_amount");
+                if (rs.wasNull()) {
+                    paidAmount = 0.0;
+                }
+            } catch (SQLException e) {
+                // Column might not exist in old database, default to 0.0
+                paidAmount = 0.0;
+            }
+            
+            Booking.PaymentStatus paymentStatus = Booking.PaymentStatus.PENDING;
+            try {
+                String statusStr = rs.getString("payment_status");
+                if (statusStr != null) {
+                    paymentStatus = Booking.PaymentStatus.fromString(statusStr);
+                }
+            } catch (SQLException e) {
+                // Column might not exist in old database, default to PENDING
+                paymentStatus = Booking.PaymentStatus.PENDING;
+            }
+            
             Booking booking = new Booking(
                     rs.getInt("booking_id"),
                     customer,
@@ -154,11 +345,90 @@ public class BookingDAO {
                     date,
                     rs.getInt("tables"),
                     rs.getDouble("total"),
+                    paidAmount,
+                    paymentStatus,
                     rs.getString("notes"));
+            
+            // Set booking code
+            try {
+                String bookingCode = rs.getString("booking_code");
+                if (bookingCode == null || bookingCode.isEmpty()) {
+                    // Generate code for old bookings that don't have one
+                    bookingCode = generateRandomBookingCode(conn);
+                    booking.setBookingCode(bookingCode);
+                    // Update in database
+                    try (PreparedStatement updatePs = conn.prepareStatement("UPDATE bookings SET booking_code = ? WHERE id = ?")) {
+                        updatePs.setString(1, bookingCode);
+                        updatePs.setInt(2, booking.getId());
+                        updatePs.executeUpdate();
+                    }
+                } else {
+                    booking.setBookingCode(bookingCode);
+                }
+            } catch (SQLException e) {
+                // Column might not exist, generate new code
+                String bookingCode = generateRandomBookingCode(conn);
+                booking.setBookingCode(bookingCode);
+            }
+            
+            // Set voucher fields
+            try {
+                String voucherCode = rs.getString("voucher_code");
+                String voucherType = rs.getString("voucher_type");
+                Double voucherValue = null;
+                try {
+                    Object voucherValueObj = rs.getObject("voucher_value");
+                    if (voucherValueObj != null) {
+                        voucherValue = rs.getDouble("voucher_value");
+                        if (rs.wasNull()) {
+                            voucherValue = null;
+                        }
+                    }
+                } catch (SQLException e) {
+                    // Column might not exist
+                }
+                booking.setVoucherCode(voucherCode);
+                booking.setVoucherType(voucherType);
+                booking.setVoucherValue(voucherValue);
+            } catch (SQLException e) {
+                // Columns might not exist in old database
+                booking.setVoucherCode(null);
+                booking.setVoucherType(null);
+                booking.setVoucherValue(null);
+            }
+            
             booking.setMenuItems(new ArrayList<>());
             return booking;
         } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
+    }
+    
+    /**
+     * Generate a random 5-digit booking code that doesn't exist in the database
+     */
+    private String generateRandomBookingCode(Connection conn) throws SQLException {
+        java.util.Random random = new java.util.Random();
+        String code;
+        int attempts = 0;
+        do {
+            // Generate random 5-digit number (10000-99999)
+            int num = 10000 + random.nextInt(90000);
+            code = String.valueOf(num);
+            attempts++;
+            
+            // Check if code already exists
+            try (PreparedStatement checkPs = conn.prepareStatement("SELECT COUNT(*) FROM bookings WHERE booking_code = ?")) {
+                checkPs.setString(1, code);
+                try (ResultSet rs = checkPs.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        return code; // Code is unique
+                    }
+                }
+            }
+        } while (attempts < 100); // Prevent infinite loop
+        
+        // Fallback: use timestamp-based code if random generation fails
+        return String.format("%05d", System.currentTimeMillis() % 100000);
     }
 }

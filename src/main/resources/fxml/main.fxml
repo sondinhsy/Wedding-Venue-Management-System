@@ -36,6 +36,11 @@
                     <Tooltip text="Quản lý thực đơn"/>
                 </tooltip>
             </Button>
+            <Button fx:id="navExtras" text="💰 Phát sinh" styleClass="nav-btn" onAction="#showExtrasServices">
+                <tooltip>
+                    <Tooltip text="Phát sinh &amp; Dịch vụ"/>
+                </tooltip>
+            </Button>
             <Button fx:id="navReport" text="📈 Báo cáo" styleClass="nav-btn" onAction="#showReports">
                 <tooltip>
                     <Tooltip text="Xuất báo cáo"/>
@@ -73,6 +78,11 @@
             <Button text="🍽️ Thực đơn" onAction="#showMenu">
                 <tooltip>
                     <Tooltip text="Quản lý thực đơn"/>
+                </tooltip>
+            </Button>
+            <Button text="💰 Phát sinh" onAction="#showExtrasServices">
+                <tooltip>
+                    <Tooltip text="Phát sinh &amp; Dịch vụ"/>
                 </tooltip>
             </Button>
             <Button text="📈 Báo cáo" onAction="#showReports">
@@ -247,6 +257,9 @@
                         </columns>
                     </TableView>
                 </VBox>
+            </Tab>
+            <Tab text="💰 Phát sinh &amp; Dịch vụ" fx:id="extrasServicesTab">
+                <VBox fx:id="extrasServicesContainer"/>
             </Tab>
             <Tab text="📈 Báo cáo">
                 <VBox spacing="16">
