@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox spacing="16" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.weddingapp.controller.CustomerManagementController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <Label text="👥 Quản lý Khách hàng" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+    <Label text="Quản lý thông tin khách hàng: thêm, sửa, xóa và tìm kiếm" styleClass="hint"/>
+    
+    <HBox spacing="16" HBox.hgrow="ALWAYS">
+        <VBox spacing="12" HBox.hgrow="ALWAYS" prefWidth="400">
+            <Label text="➕ Thêm / Sửa khách hàng" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <VBox spacing="12" styleClass="card">
+                <VBox spacing="8">
+                    <Label text="Tên khách hàng *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="customerNameField" promptText="Nhập tên khách hàng" prefHeight="40"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="Số điện thoại" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="customerPhoneField" promptText="Ví dụ: 0912345678" prefHeight="40"/>
+                </VBox>
+                <VBox spacing="8">
+                    <Label text="Email" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="customerEmailField" promptText="Ví dụ: customer@email.com" prefHeight="40"/>
+                </VBox>
+                <HBox spacing="12">
+                    <Button text="💾 Lưu" onAction="#handleSave" prefWidth="120"/>
+                    <Button text="🔄 Làm mới" onAction="#handleReset" prefWidth="120" styleClass="ghost-btn"/>
+                </HBox>
+            </VBox>
+        </VBox>
+        
+        <VBox spacing="12" HBox.hgrow="ALWAYS">
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="📋 Danh sách khách hàng" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                <Pane HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="searchField" promptText="🔍 Tìm kiếm..." prefWidth="250" prefHeight="35"/>
+            </HBox>
+            <TableView fx:id="customerTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colCustomerName" text="Tên khách hàng" prefWidth="200"/>
+                    <TableColumn fx:id="colCustomerPhone" text="Điện thoại" prefWidth="150"/>
+                    <TableColumn fx:id="colCustomerEmail" text="Email" prefWidth="200"/>
+                    <TableColumn fx:id="colCustomerActions" text="Thao tác" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </HBox>
+</VBox>

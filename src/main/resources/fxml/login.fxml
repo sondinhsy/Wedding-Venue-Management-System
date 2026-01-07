@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.weddingapp.controller.LoginController"
+            styleClass="login-root">
+    <center>
+        <VBox alignment="CENTER" spacing="30" styleClass="login-container">
+            <VBox alignment="CENTER" spacing="10">
+                <Label text="💒" style="-fx-font-size: 64px;"/>
+                <Label text="HỆ THỐNG QUẢN LÝ SẢNH CƯỚI" styleClass="login-title"/>
+                <Label text="Đăng nhập để tiếp tục" styleClass="login-subtitle"/>
+            </VBox>
+            
+            <VBox spacing="20" styleClass="login-form" prefWidth="350">
+                <VBox spacing="8">
+                    <Label text="Tên đăng nhập *" style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                    <TextField fx:id="usernameField" promptText="Nhập tên đăng nhập" prefHeight="40"/>
+                </VBox>
+                
+                <VBox spacing="8">
+                    <Label text="Mật khẩu *" style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                    <PasswordField fx:id="passwordField" promptText="Nhập mật khẩu" prefHeight="40" onAction="#handleLogin"/>
+                </VBox>
+                
+                <Label fx:id="errorLabel" styleClass="error-label" visible="false" managed="false"/>
+                
+                <Button text="🔐 Đăng nhập" onAction="#handleLogin" prefHeight="45" styleClass="login-button" defaultButton="true"/>
+                
+                <VBox spacing="4" alignment="CENTER" styleClass="login-hint">
+                    <Label text="Tài khoản mặc định:" style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>
+                    <Label text="Admin: admin / admin123" style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>
+                    <Label text="Nhân viên: staff / staff123" style="-fx-font-size: 11px; -fx-text-fill: #94a3b8;"/>
+                </VBox>
+            </VBox>
+        </VBox>
+    </center>
+</BorderPane>

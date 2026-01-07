@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.weddingapp.controller.DashboardController">
+    <top>
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="top-bar">
+            <padding>
+                <Insets top="12" right="20" bottom="12" left="20"/>
+            </padding>
+            <Label text="💒 QUẢN LÝ SẢNH CƯỚI" styleClass="brand"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Label fx:id="userInfoLabel" text="Nhân viên" style="-fx-text-fill: white; -fx-font-size: 13px;"/>
+            <Separator orientation="VERTICAL" prefHeight="24" styleClass="separator"/>
+            <Button text="🚪 Đăng xuất" onAction="#handleLogout" styleClass="nav-btn"/>
+        </HBox>
+    </top>
+    <left>
+        <VBox spacing="8" styleClass="side-nav" prefWidth="220">
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16"/>
+            </padding>
+            <Label text="📋 Menu chính" styleClass="side-header"/>
+            <Button text="🏠 Dashboard" onAction="#showDashboard" styleClass="nav-menu-btn" fx:id="btnDashboard"/>
+            <Button text="🏛️ Quản lý Sảnh" onAction="#showHallManagement" styleClass="nav-menu-btn" fx:id="btnHall"/>
+            <Button text="🎫 Quản lý Voucher" onAction="#showVoucherManagement" styleClass="nav-menu-btn" fx:id="btnVoucher"/>
+            <Button text="🍽️ Quản lý Menu" onAction="#showMenuManagement" styleClass="nav-menu-btn" fx:id="btnMenu"/>
+            <Button text="👥 Quản lý Khách hàng" onAction="#showCustomerManagement" styleClass="nav-menu-btn" fx:id="btnCustomer"/>
+            <Button text="📅 Booking / Đặt chỗ" onAction="#showBooking" styleClass="nav-menu-btn" fx:id="btnBooking"/>
+            <Button text="💰 Phát sinh / Dịch vụ" onAction="#showExtrasServices" styleClass="nav-menu-btn" fx:id="btnExtras"/>
+            <Button text="💰 Hóa đơn / Thống kê" onAction="#showInvoice" styleClass="nav-menu-btn" fx:id="btnInvoice"/>
+        </VBox>
+    </left>
+    <center>
+        <StackPane fx:id="contentPane">
+            <!-- Dashboard content sẽ được load động -->
+        </StackPane>
+    </center>
+</BorderPane>

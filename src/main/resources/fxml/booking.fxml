@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane hgap="20" vgap="16" xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"
+         fx:controller="com.weddingapp.controller.BookingController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+    <columnConstraints>
+        <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+        <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+    </columnConstraints>
+    <children>
+        <VBox spacing="12" GridPane.columnIndex="0">
+            <Label text="📝 Thông tin đặt chỗ" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <Label text="Ngày tổ chức *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <DatePicker fx:id="datePicker" promptText="Chọn ngày tổ chức" prefWidth="300"/>
+            <Label text="Khách hàng *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <HBox spacing="8">
+                <ComboBox fx:id="customerCombo" promptText="Chọn khách hàng" prefWidth="250"/>
+                <Button text="➕ Thêm mới" onAction="#handleAddNewCustomer" prefWidth="100"/>
+            </HBox>
+            <Label text="Sảnh cưới *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <ComboBox fx:id="hallCombo" promptText="Chọn sảnh cưới" prefWidth="300"/>
+            <Label fx:id="hallInfoLabel" text="Chọn sảnh để xem chi tiết" styleClass="hint"/>
+            <Label text="Số bàn *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <Spinner fx:id="tableSpinner" prefWidth="300"/>
+            <Label text="Áp mã voucher" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <HBox spacing="8">
+                <TextField fx:id="voucherCodeField" promptText="Nhập mã voucher" prefWidth="200"/>
+                <Button text="Áp dụng" onAction="#handleApplyVoucher" prefWidth="100"/>
+            </HBox>
+            <Label fx:id="voucherStatusLabel" text="" style="-fx-font-size: 11px; -fx-text-fill: #64748b;"/>
+            <Label text="Ghi chú" style="-fx-font-size: 12px; -fx-text-fill: #64748b; -fx-padding: 8 0 0 0;"/>
+            <TextArea fx:id="notesArea" promptText="Yêu cầu đặc biệt, ghi chú..." prefRowCount="4" prefWidth="300"/>
+        </VBox>
+        <VBox spacing="12" GridPane.columnIndex="1">
+            <Label text="🍽️ Chọn combo / thực đơn" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+            <HBox spacing="8">
+                <RadioButton fx:id="filterAllBtn" text="Tất cả" toggleGroup="$menuFilterGroup" userData="all" styleClass="chip"/>
+                <RadioButton fx:id="filterComboBtn" text="Combo" toggleGroup="$menuFilterGroup" userData="combo" styleClass="chip"/>
+                <RadioButton fx:id="filterSingleBtn" text="Món lẻ" toggleGroup="$menuFilterGroup" userData="single" styleClass="chip"/>
+            </HBox>
+            <Button text="📖 Mở catalog món" onAction="#openMenuCatalog" styleClass="ghost-btn" prefWidth="200">
+                <tooltip>
+                    <Tooltip text="Xem tất cả món ăn và combo"/>
+                </tooltip>
+            </Button>
+            <Label text="Danh sách đã chọn:" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+            <ListView fx:id="menuList" prefHeight="200" VBox.vgrow="ALWAYS"/>
+            <VBox spacing="4" styleClass="card">
+                <Label text="💰 Tổng tiền" style="-fx-font-size: 13px;"/>
+                <Label fx:id="totalLabel" text="0 đ" styleClass="metric"/>
+            </VBox>
+            <!-- Thông tin tóm tắt đơn đặt chỗ -->
+            <VBox spacing="6" styleClass="card">
+                <Label text="📋 Tóm tắt đơn đặt chỗ" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                <Label fx:id="summaryHallLabel" wrapText="true" style="-fx-font-size: 12px;"/>
+                <Label fx:id="summaryMenuLabel" wrapText="true" style="-fx-font-size: 12px;"/>
+                <Label fx:id="summaryVoucherLabel" wrapText="true" style="-fx-font-size: 12px;"/>
+                <Label fx:id="summaryTotalLabel" wrapText="true" style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                <Label fx:id="viewDetailsLink" text="Xem chi tiết" 
+                       onMouseClicked="#handleViewBookingDetails"
+                       style="-fx-font-size: 10px; -fx-font-style: italic; -fx-text-fill: #3b82f6; -fx-underline: true; -fx-cursor: hand; -fx-padding: 4 0 0 0;"
+                       onMouseEntered="#handleViewDetailsMouseEnter"
+                       onMouseExited="#handleViewDetailsMouseExit"/>
+            </VBox>
+            <Button fx:id="saveBookingButton" text="✅ Lưu booking" onAction="#handleSaveBooking" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
+                <tooltip>
+                    <Tooltip text="Lưu thông tin đặt chỗ"/>
+                </tooltip>
+            </Button>
+        </VBox>
+    </children>
+    <fx:define>
+        <ToggleGroup fx:id="menuFilterGroup"/>
+    </fx:define>
+</GridPane>

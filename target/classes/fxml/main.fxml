@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.weddingapp.controller.MainController">
+    <fx:define>
+        <ToggleGroup fx:id="menuFilterGroup"/>
+    </fx:define>
+    <top>
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="top-bar">
+            <padding>
+                <Insets top="12" right="20" bottom="12" left="20"/>
+            </padding>
+            <Label text="💒 QUẢN LÝ SẢNH CƯỚI" styleClass="brand"/>
+            <Separator orientation="VERTICAL" prefHeight="24"/>
+            <Button fx:id="navDashboard" text="📊 Tổng quan" styleClass="nav-btn" onAction="#showDashboard">
+                <tooltip>
+                    <Tooltip text="Xem tổng quan hệ thống"/>
+                </tooltip>
+            </Button>
+            <Button fx:id="navBooking" text="📅 Đặt chỗ" styleClass="nav-btn" onAction="#showBooking">
+                <tooltip>
+                    <Tooltip text="Tạo booking mới"/>
+                </tooltip>
+            </Button>
+            <Button fx:id="navCustomers" text="👥 Khách hàng" styleClass="nav-btn" onAction="#showCustomers">
+                <tooltip>
+                    <Tooltip text="Quản lý khách hàng"/>
+                </tooltip>
+            </Button>
+            <Button fx:id="navMenu" text="🍽️ Thực đơn" styleClass="nav-btn" onAction="#showMenu">
+                <tooltip>
+                    <Tooltip text="Quản lý thực đơn"/>
+                </tooltip>
+            </Button>
+            <Button fx:id="navExtras" text="💰 Phát sinh" styleClass="nav-btn" onAction="#showExtrasServices">
+                <tooltip>
+                    <Tooltip text="Phát sinh &amp; Dịch vụ"/>
+                </tooltip>
+            </Button>
+            <Button fx:id="navReport" text="📈 Báo cáo" styleClass="nav-btn" onAction="#showReports">
+                <tooltip>
+                    <Tooltip text="Xuất báo cáo"/>
+                </tooltip>
+            </Button>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="🔄 Tải lại" onAction="#reloadData">
+                <tooltip>
+                    <Tooltip text="Làm mới dữ liệu"/>
+                </tooltip>
+            </Button>
+        </HBox>
+    </top>
+    <left>
+        <VBox spacing="8" styleClass="side-nav">
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16"/>
+            </padding>
+            <Label text="📋 Menu chính" styleClass="side-header"/>
+            <Button text="📊 Dashboard" onAction="#showDashboard">
+                <tooltip>
+                    <Tooltip text="Tổng quan hệ thống"/>
+                </tooltip>
+            </Button>
+            <Button text="📅 Đặt chỗ" onAction="#showBooking">
+                <tooltip>
+                    <Tooltip text="Tạo booking mới"/>
+                </tooltip>
+            </Button>
+            <Button text="👥 Khách hàng" onAction="#showCustomers">
+                <tooltip>
+                    <Tooltip text="Quản lý khách hàng"/>
+                </tooltip>
+            </Button>
+            <Button text="🍽️ Thực đơn" onAction="#showMenu">
+                <tooltip>
+                    <Tooltip text="Quản lý thực đơn"/>
+                </tooltip>
+            </Button>
+            <Button text="💰 Phát sinh" onAction="#showExtrasServices">
+                <tooltip>
+                    <Tooltip text="Phát sinh &amp; Dịch vụ"/>
+                </tooltip>
+            </Button>
+            <Button text="📈 Báo cáo" onAction="#showReports">
+                <tooltip>
+                    <Tooltip text="Xuất báo cáo CSV"/>
+                </tooltip>
+            </Button>
+        </VBox>
+    </left>
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <Tab text="📊 Dashboard">
+                <VBox spacing="16">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="📊 Tổng quan nhanh" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                    <HBox spacing="16" HBox.hgrow="ALWAYS">
+                        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                            <Label text="👥 Tổng khách hàng" style="-fx-font-size: 13px;"/>
+                            <Label fx:id="customerCountLabel" styleClass="metric"/>
+                        </VBox>
+                        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                            <Label text="📅 Số booking" style="-fx-font-size: 13px;"/>
+                            <Label fx:id="bookingCountLabel" styleClass="metric"/>
+                        </VBox>
+                        <VBox styleClass="card" HBox.hgrow="ALWAYS">
+                            <Label text="💰 Doanh thu ước tính" style="-fx-font-size: 13px;"/>
+                            <Label fx:id="revenueLabel" styleClass="metric"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="16" HBox.hgrow="ALWAYS">
+                        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+                            <Label text="🏛️ Doanh thu theo sảnh" style="-fx-font-size: 14px; -fx-font-weight: 600;"/>
+                            <PieChart fx:id="hallRevenueChart" prefHeight="280" VBox.vgrow="ALWAYS"/>
+                        </VBox>
+                        <VBox styleClass="card" VBox.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+                            <Label text="🍽️ Doanh thu theo thực đơn" style="-fx-font-size: 14px; -fx-font-weight: 600;"/>
+                            <PieChart fx:id="menuRevenueChart" prefHeight="280" VBox.vgrow="ALWAYS"/>
+                        </VBox>
+                    </HBox>
+                    <Label text="📋 Booking gần nhất" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 8 0;"/>
+                    <TableView fx:id="bookingTable" prefHeight="320" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colBookingCustomer" text="Khách hàng" prefWidth="150"/>
+                            <TableColumn fx:id="colBookingHall" text="Sảnh" prefWidth="120"/>
+                            <TableColumn fx:id="colBookingDate" text="Ngày" prefWidth="100"/>
+                            <TableColumn fx:id="colBookingTables" text="Bàn" prefWidth="60"/>
+                            <TableColumn fx:id="colBookingTotal" text="Tổng tiền" prefWidth="150"/>
+                            <TableColumn fx:id="colBookingMenu" text="Thực đơn" prefWidth="220"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            <Tab text="📅 Đặt chỗ">
+                <GridPane hgap="20" vgap="16">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                        <ColumnConstraints percentWidth="50" hgrow="ALWAYS"/>
+                    </columnConstraints>
+                    <children>
+                        <VBox spacing="12" GridPane.columnIndex="0">
+                            <Label text="📝 Thông tin đặt chỗ" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                            <Label text="Ngày tổ chức *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            <DatePicker fx:id="datePicker" promptText="Chọn ngày tổ chức" prefWidth="300"/>
+                            <Label text="Khách hàng *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            <ComboBox fx:id="customerCombo" promptText="Chọn khách hàng" prefWidth="300"/>
+                            <Label text="Sảnh cưới *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            <ComboBox fx:id="hallCombo" promptText="Chọn sảnh cưới" prefWidth="300"/>
+                            <Label fx:id="hallInfoLabel" text="Chọn sảnh để xem chi tiết" styleClass="hint"/>
+                            <Label text="Số bàn *" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            <Spinner fx:id="tableSpinner" prefWidth="300"/>
+                            <Label text="Ghi chú" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            <TextArea fx:id="notesArea" promptText="Yêu cầu đặc biệt, ghi chú..." prefRowCount="4" prefWidth="300"/>
+                        </VBox>
+                        <VBox spacing="12" GridPane.columnIndex="1">
+                            <Label text="🍽️ Chọn combo / thực đơn" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                            <HBox spacing="8">
+                                <RadioButton fx:id="filterAllBtn" text="Tất cả" toggleGroup="$menuFilterGroup" userData="all" styleClass="chip"/>
+                                <RadioButton fx:id="filterComboBtn" text="Combo" toggleGroup="$menuFilterGroup" userData="combo" styleClass="chip"/>
+                                <RadioButton fx:id="filterSingleBtn" text="Món lẻ" toggleGroup="$menuFilterGroup" userData="single" styleClass="chip"/>
+                            </HBox>
+                            <Button text="📖 Mở catalog món" onAction="#openMenuCatalog" styleClass="ghost-btn" prefWidth="200">
+                                <tooltip>
+                                    <Tooltip text="Xem tất cả món ăn và combo"/>
+                                </tooltip>
+                            </Button>
+                            <Label text="Danh sách đã chọn:" style="-fx-font-size: 12px; -fx-text-fill: #64748b;"/>
+                            <ListView fx:id="menuList" prefHeight="200" VBox.vgrow="ALWAYS"/>
+                            <VBox spacing="4" styleClass="card">
+                                <Label text="💰 Tổng tiền" style="-fx-font-size: 13px;"/>
+                                <Label fx:id="totalLabel" text="0 đ" styleClass="metric"/>
+                            </VBox>
+                            <Button text="✅ Lưu booking" onAction="#handleSaveBooking" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
+                                <tooltip>
+                                    <Tooltip text="Lưu thông tin đặt chỗ"/>
+                                </tooltip>
+                            </Button>
+                        </VBox>
+                    </children>
+                </GridPane>
+            </Tab>
+            <Tab text="👥 Khách hàng">
+                <VBox spacing="16">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="➕ Thêm khách hàng mới" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <TextField fx:id="customerNameField" promptText="Tên khách hàng *" prefWidth="250">
+                            <tooltip>
+                                <Tooltip text="Nhập tên khách hàng (bắt buộc)"/>
+                            </tooltip>
+                        </TextField>
+                        <TextField fx:id="customerPhoneField" promptText="Số điện thoại" prefWidth="200">
+                            <tooltip>
+                                <Tooltip text="Số điện thoại (tùy chọn)"/>
+                            </tooltip>
+                        </TextField>
+                        <TextField fx:id="customerEmailField" promptText="Email" prefWidth="250">
+                            <tooltip>
+                                <Tooltip text="Email (tùy chọn)"/>
+                            </tooltip>
+                        </TextField>
+                        <Button text="➕ Thêm" onAction="#handleAddCustomer" prefWidth="120">
+                            <tooltip>
+                                <Tooltip text="Thêm khách hàng mới vào hệ thống"/>
+                            </tooltip>
+                        </Button>
+                    </HBox>
+                    <Label text="📋 Danh sách khách hàng" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 8 0;"/>
+                    <TableView fx:id="customerTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colCustomerName" text="Tên"/>
+                            <TableColumn fx:id="colCustomerPhone" text="Điện thoại"/>
+                            <TableColumn fx:id="colCustomerEmail" text="Email"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            <Tab text="🍽️ Thực đơn">
+                <VBox spacing="16">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="➕ Thêm món / combo mới" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <TextField fx:id="menuTitleField" promptText="Tên món / combo *" prefWidth="300">
+                            <tooltip>
+                                <Tooltip text="Nhập tên món hoặc combo (bắt buộc)"/>
+                            </tooltip>
+                        </TextField>
+                        <TextField fx:id="menuPriceField" promptText="Giá (VNĐ) *" prefWidth="200">
+                            <tooltip>
+                                <Tooltip text="Nhập giá tiền (bắt buộc)"/>
+                            </tooltip>
+                        </TextField>
+                        <Button text="➕ Thêm" onAction="#handleAddMenu" prefWidth="120">
+                            <tooltip>
+                                <Tooltip text="Thêm món mới vào thực đơn"/>
+                            </tooltip>
+                        </Button>
+                    </HBox>
+                    <Label text="📋 Danh sách thực đơn" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a; -fx-padding: 8 0;"/>
+                    <TableView fx:id="menuTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="colMenuTitle" text="Tên"/>
+                            <TableColumn fx:id="colMenuPrice" text="Giá (VNĐ)" prefWidth="150"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            <Tab text="💰 Phát sinh &amp; Dịch vụ" fx:id="extrasServicesTab">
+                <VBox fx:id="extrasServicesContainer"/>
+            </Tab>
+            <Tab text="📈 Báo cáo">
+                <VBox spacing="16">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="📊 Xuất báo cáo CSV" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;"/>
+                    <Label text="Xuất tất cả booking và thực đơn đã chọn ra file CSV để phân tích" styleClass="hint"/>
+                    <Button text="📥 Xuất CSV" onAction="#handleExportCsv" prefWidth="200" style="-fx-font-size: 14px; -fx-font-weight: bold;">
+                        <tooltip>
+                            <Tooltip text="Xuất dữ liệu booking ra file CSV"/>
+                        </tooltip>
+                    </Button>
+                    <Label text="Trạng thái:" style="-fx-font-size: 13px; -fx-text-fill: #64748b;"/>
+                    <TextArea fx:id="exportStatusArea" editable="false" prefRowCount="10" styleClass="export-status" VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>

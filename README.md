@@ -1,1 +1,0 @@
-# Wedding-Venue-Management-System
